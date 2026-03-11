@@ -303,6 +303,11 @@
             outline: none;
         }
 
+        .name-input:focus {
+            border-color: #003d6b;
+            box-shadow: 0 0 15px rgba(0, 90, 157, 0.3);
+        }
+
         .save-btn {
             background: #005a9d;
             border: none;
@@ -385,7 +390,8 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzMGV1nL9tpP4fm7P3oeHbVEmsoWZfpXlLriGJ8hsY3uGFvwBkqSic90ZBJaqAA9NRH/exec';
+        // ⚡ НОВАЯ ССЫЛКА НА СКРИПТ
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxfzAPk70NgCYFxQP8KnHHUwmALjBD3INYlCRraSOMsWe01VodkMolW_IB1u3RdCo-D/exec';
         const SAVE_INTERVAL = 5;
         
         let userName = localStorage.getItem('energyTap_userName');
