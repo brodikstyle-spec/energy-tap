@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ЭНЕРГОТАП</title>
+</head>
+<body>
+    <h1>Таблица лидеров</h1>
+    <div id="result">Загрузка...</div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzMGV1nL9tpP4fm7P3oeHbVEmsoWZfpXlLriGJ8hsY3uGFvwBkqSic90ZBJaqAA9NRH/exec';
+        
+        fetch(API_URL + '?t=' + Date.now())
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerHTML = 
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(error => {
+                document.getElementById('result').innerHTML = 'Ошибка: ' + error;
+            });
+    </script>
+</body>
+</html>
