@@ -1,24 +1,496 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>ЭНЕРГОТАП</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ ЭНЕРГОТАП | АДМИН-ПАНЕЛЬ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #030614);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(18, 25, 45, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 48px;
+            padding: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .title h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title i {
+            font-size: 2.5rem;
+            color: #ffd700;
+            filter: drop-shadow(0 0 10px #ffd700);
+        }
+
+        .stats-panel {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e2a47, #0f1a2f);
+            padding: 15px 25px;
+            border-radius: 30px;
+            border: 1px solid #ffd70033;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            color: #ffd700;
+        }
+
+        .stat-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #a0b3d9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ff4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Подиум */
+        .podium {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            margin: 50px 0 60px;
+            flex-wrap: wrap;
+        }
+
+        .podium-card {
+            background: linear-gradient(180deg, #1e2a47, #0f1a2f);
+            border-radius: 30px 30px 20px 20px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.5);
+            position: relative;
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .podium-1 {
+            transform: scale(1.1);
+            background: linear-gradient(180deg, #2a3b5a, #1a2a45);
+            border-color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            order: 2;
+        }
+
+        .podium-2 {
+            order: 1;
+        }
+
+        .podium-3 {
+            order: 3;
+        }
+
+        .crown {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 10px gold);
+        }
+
+        .podium-rank {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .podium-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .podium-score {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .podium-score small {
+            font-size: 1rem;
+            color: #8096c0;
+            -webkit-text-fill-color: #8096c0;
+        }
+
+        /* Таблица */
+        .table-container {
+            background: rgba(10, 15, 26, 0.8);
+            border-radius: 30px;
+            border: 1px solid #2a3b5a;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 150px 80px;
+            background: linear-gradient(135deg, #1e2a47, #141f38);
+            padding: 20px;
+            color: #ffd700;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #ffd70033;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 150px 80px;
+            padding: 15px 20px;
+            border-bottom: 1px solid #1e2a47;
+            transition: all 0.2s ease;
+            color: #e0e7ff;
+            align-items: center;
+        }
+
+        .table-row:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .rank {
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #0a0f1e;
+            font-size: 1.2rem;
+        }
+
+        .username {
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .score {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #ffd700;
+        }
+
+        .trend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 1.1rem;
+        }
+
+        .footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #8096c0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .update-time {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border: none;
+            color: #0a0f1e;
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            border: 1px solid #ffd700;
+            font-size: 1rem;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px gold;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8096c0;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ffd70033;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 20px; }
+            .title h1 { font-size: 1.8rem; }
+            .table-header { 
+                grid-template-columns: 50px 1fr 100px 50px;
+                font-size: 0.9rem;
+                padding: 15px;
+            }
+            .table-row {
+                grid-template-columns: 50px 1fr 100px 50px;
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+            .avatar { width: 30px; height: 30px; font-size: 0.9rem; }
+            .score { font-size: 1.1rem; }
+        }
+    </style>
 </head>
 <body>
-    <h1>Таблица лидеров</h1>
-    <div id="result">Загрузка...</div>
+    <div class="container">
+        <div class="header">
+            <div class="title">
+                <i class="fas fa-bolt"></i>
+                <h1>ЭНЕРГОТАП ПАНЕЛЬ</h1>
+            </div>
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <i class="fas fa-users stat-icon"></i>
+                    <div class="stat-info">
+                        <span class="stat-label">Участников</span>
+                        <span class="stat-value" id="totalPlayers">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-bolt stat-icon"></i>
+                    <div class="stat-info">
+                        <span class="stat-label">Всего МВт</span>
+                        <span class="stat-value" id="totalMW">0</span>
+                    </div>
+                </div>
+                <div class="live-badge">
+                    <i class="fas fa-circle"></i> LIVE
+                </div>
+            </div>
+        </div>
+
+        <!-- Подиум с топ-3 -->
+        <div class="podium" id="podium"></div>
+
+        <!-- Таблица лидеров -->
+        <div class="table-container">
+            <div class="table-header">
+                <div>МЕСТО</div>
+                <div>УЧАСТНИК</div>
+                <div>МЕГАВАТТ</div>
+                <div>⚡</div>
+            </div>
+            <div id="leaderboardRows"></div>
+        </div>
+
+        <div class="footer">
+            <div class="update-time" id="updateTime">
+                <i class="far fa-clock"></i> Обновление...
+            </div>
+            <button class="refresh-btn" onclick="loadLeaderboard()">
+                <i class="fas fa-sync-alt"></i> ОБНОВИТЬ
+            </button>
+        </div>
+    </div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMGV1nL9tpP4fm7P3oeHbVEmsoWZfpXlLriGJ8hsY3uGFvwBkqSic90ZBJaqAA9NRH/exec';
-        
-        fetch(API_URL + '?t=' + Date.now())
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('result').innerHTML = 
-                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
-            })
-            .catch(error => {
-                document.getElementById('result').innerHTML = 'Ошибка: ' + error;
-            });
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch(API_URL + '?t=' + Date.now());
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    // Данные уже отсортированы от бэкенда (от большего к меньшему)
+                    const players = data.data;
+                    const totalPlayers = players.length;
+                    const totalMW = players.reduce((sum, p) => sum + (p.taps || 0), 0);
+                    
+                    // Обновляем статистику
+                    document.getElementById('totalPlayers').textContent = totalPlayers;
+                    document.getElementById('totalMW').textContent = formatNumber(totalMW);
+                    
+                    // Формируем подиум (топ-3)
+                    let podiumHtml = '';
+                    
+                    if (players.length > 1) {
+                        podiumHtml += `
+                            <div class="podium-card podium-2">
+                                <div class="podium-rank">2</div>
+                                <div class="podium-name">${players[1]?.userId?.substring(0, 8) || '???'}</div>
+                                <div class="podium-score">${formatNumber(players[1]?.taps || 0)} <small>МВт</small></div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (players.length > 0) {
+                        podiumHtml += `
+                            <div class="podium-card podium-1">
+                                <div class="crown">👑</div>
+                                <div class="podium-rank">1</div>
+                                <div class="podium-name">${players[0]?.userId?.substring(0, 8) || '???'}</div>
+                                <div class="podium-score">${formatNumber(players[0]?.taps || 0)} <small>МВт</small></div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (players.length > 2) {
+                        podiumHtml += `
+                            <div class="podium-card podium-3">
+                                <div class="podium-rank">3</div>
+                                <div class="podium-name">${players[2]?.userId?.substring(0, 8) || '???'}</div>
+                                <div class="podium-score">${formatNumber(players[2]?.taps || 0)} <small>МВт</small></div>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('podium').innerHTML = podiumHtml || '<div style="text-align:center;color:#8096c0;grid-column:span 3">Пока нет участников</div>';
+                    
+                    // Формируем строки таблицы (все участники)
+                    const rowsHtml = players.map((player, index) => {
+                        const rank = index + 1;
+                        const avatarSymbol = player.userId?.charAt(5)?.toUpperCase() || '⚡';
+                        
+                        return `
+                            <div class="table-row">
+                                <div class="rank rank-${rank <= 3 ? rank : ''}">${rank}</div>
+                                <div class="user-info">
+                                    <div class="avatar">${avatarSymbol}</div>
+                                    <span class="username">${player.userId || 'Аноним'}</span>
+                                </div>
+                                <div class="score">${formatNumber(player.taps || 0)}</div>
+                                <div class="trend">${rank <= 3 ? '🏆' : '⚡'}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    document.getElementById('leaderboardRows').innerHTML = rowsHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных. Начните тапать!</div>';
+                    document.getElementById('updateTime').innerHTML = `<i class="far fa-clock"></i> Обновлено: ${new Date().toLocaleTimeString()}`;
+                }
+            } catch(error) {
+                console.error('Ошибка:', error);
+                document.getElementById('leaderboardRows').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color:#ff6b6b"></i><br>
+                        Ошибка загрузки данных
+                    </div>
+                `;
+            }
+        }
+
+        // Загружаем сразу и каждые 5 секунд
+        loadLeaderboard();
+        setInterval(loadLeaderboard, 5000);
     </script>
 </body>
 </html>
