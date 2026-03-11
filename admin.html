@@ -122,7 +122,6 @@
             50% { opacity: 0.7; }
         }
 
-        /* Подиум */
         .podium {
             display: flex;
             justify-content: center;
@@ -141,7 +140,6 @@
             box-shadow: 0 20px 30px -10px rgba(0,0,0,0.5);
             position: relative;
             min-width: 200px;
-            transition: all 0.3s ease;
         }
 
         .podium-1 {
@@ -152,13 +150,8 @@
             order: 2;
         }
 
-        .podium-2 {
-            order: 1;
-        }
-
-        .podium-3 {
-            order: 3;
-        }
+        .podium-2 { order: 1; }
+        .podium-3 { order: 3; }
 
         .crown {
             position: absolute;
@@ -198,7 +191,6 @@
             -webkit-text-fill-color: #8096c0;
         }
 
-        /* Таблица */
         .table-container {
             background: rgba(10, 15, 26, 0.8);
             border-radius: 30px;
@@ -322,12 +314,6 @@
             color: #8096c0;
         }
 
-        .empty-state i {
-            font-size: 4rem;
-            color: #ffd70033;
-            margin-bottom: 20px;
-        }
-
         @media (max-width: 700px) {
             .container { padding: 20px; }
             .title h1 { font-size: 1.8rem; }
@@ -339,10 +325,7 @@
             .table-row {
                 grid-template-columns: 50px 1fr 100px 50px;
                 padding: 12px 15px;
-                font-size: 0.9rem;
             }
-            .avatar { width: 30px; height: 30px; font-size: 0.9rem; }
-            .score { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -405,29 +388,32 @@
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
 
+        // Функция для получения имени участника (сначала имя, если нет - ID)
+        function getPlayerName(player) {
+            return player.userName || player.userId || 'Аноним';
+        }
+
         async function loadLeaderboard() {
             try {
                 const response = await fetch(API_URL + '?t=' + Date.now());
                 const data = await response.json();
                 
                 if (data.success && data.data) {
-                    // Данные уже отсортированы от бэкенда (от большего к меньшему)
                     const players = data.data;
                     const totalPlayers = players.length;
                     const totalMW = players.reduce((sum, p) => sum + (p.taps || 0), 0);
                     
-                    // Обновляем статистику
                     document.getElementById('totalPlayers').textContent = totalPlayers;
                     document.getElementById('totalMW').textContent = formatNumber(totalMW);
                     
-                    // Формируем подиум (топ-3)
+                    // Подиум
                     let podiumHtml = '';
                     
                     if (players.length > 1) {
                         podiumHtml += `
                             <div class="podium-card podium-2">
                                 <div class="podium-rank">2</div>
-                                <div class="podium-name">${players[1]?.userId?.substring(0, 8) || '???'}</div>
+                                <div class="podium-name">${getPlayerName(players[1])}</div>
                                 <div class="podium-score">${formatNumber(players[1]?.taps || 0)} <small>МВт</small></div>
                             </div>
                         `;
@@ -438,7 +424,7 @@
                             <div class="podium-card podium-1">
                                 <div class="crown">👑</div>
                                 <div class="podium-rank">1</div>
-                                <div class="podium-name">${players[0]?.userId?.substring(0, 8) || '???'}</div>
+                                <div class="podium-name">${getPlayerName(players[0])}</div>
                                 <div class="podium-score">${formatNumber(players[0]?.taps || 0)} <small>МВт</small></div>
                             </div>
                         `;
@@ -448,25 +434,25 @@
                         podiumHtml += `
                             <div class="podium-card podium-3">
                                 <div class="podium-rank">3</div>
-                                <div class="podium-name">${players[2]?.userId?.substring(0, 8) || '???'}</div>
+                                <div class="podium-name">${getPlayerName(players[2])}</div>
                                 <div class="podium-score">${formatNumber(players[2]?.taps || 0)} <small>МВт</small></div>
                             </div>
                         `;
                     }
                     
-                    document.getElementById('podium').innerHTML = podiumHtml || '<div style="text-align:center;color:#8096c0;grid-column:span 3">Пока нет участников</div>';
+                    document.getElementById('podium').innerHTML = podiumHtml || '<div style="text-align:center;color:#8096c0;">Пока нет участников</div>';
                     
-                    // Формируем строки таблицы (все участники)
+                    // Таблица всех участников
                     const rowsHtml = players.map((player, index) => {
                         const rank = index + 1;
-                        const avatarSymbol = player.userId?.charAt(5)?.toUpperCase() || '⚡';
+                        const avatarSymbol = getPlayerName(player).charAt(0).toUpperCase() || '⚡';
                         
                         return `
                             <div class="table-row">
                                 <div class="rank rank-${rank <= 3 ? rank : ''}">${rank}</div>
                                 <div class="user-info">
                                     <div class="avatar">${avatarSymbol}</div>
-                                    <span class="username">${player.userId || 'Аноним'}</span>
+                                    <span class="username">${getPlayerName(player)}</span>
                                 </div>
                                 <div class="score">${formatNumber(player.taps || 0)}</div>
                                 <div class="trend">${rank <= 3 ? '🏆' : '⚡'}</div>
@@ -474,7 +460,7 @@
                         `;
                     }).join('');
                     
-                    document.getElementById('leaderboardRows').innerHTML = rowsHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных. Начните тапать!</div>';
+                    document.getElementById('leaderboardRows').innerHTML = rowsHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных</div>';
                     document.getElementById('updateTime').innerHTML = `<i class="far fa-clock"></i> Обновлено: ${new Date().toLocaleTimeString()}`;
                 }
             } catch(error) {
@@ -482,13 +468,12 @@
                 document.getElementById('leaderboardRows').innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-exclamation-triangle" style="color:#ff6b6b"></i><br>
-                        Ошибка загрузки данных
+                        Ошибка загрузки
                     </div>
                 `;
             }
         }
 
-        // Загружаем сразу и каждые 5 секунд
         loadLeaderboard();
         setInterval(loadLeaderboard, 5000);
     </script>
