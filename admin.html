@@ -585,7 +585,7 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbyr-oo1u-8WEdvBrJkR1RcRfAEC2lie69aSkxrPWy1KglJx9SWIolReclyTdxu3wAmk/exec';
         
         let currentData = null;
-        const MAX_ENERGY = 10000; // Максимум МВт для 100% зарядки лампочки
+        const MAX_ENERGY = 500; // Максимум МВт для 100% зарядки лампочки
 
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -638,7 +638,7 @@
             // Подиум для топ-3
             let podiumHtml = '';
             
-            // Второе место
+            // Второе место (слева)
             if (players.length > 1) {
                 podiumHtml += `
                     <div class="podium-card podium-2">
@@ -657,7 +657,7 @@
                 `;
             }
             
-            // Первое место
+            // Первое место (по центру, с короной)
             if (players.length > 0) {
                 podiumHtml += `
                     <div class="podium-card podium-1">
@@ -677,7 +677,7 @@
                 `;
             }
             
-            // Третье место
+            // Третье место (справа)
             if (players.length > 2) {
                 podiumHtml += `
                     <div class="podium-card podium-3">
