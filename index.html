@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>⚡ ЭНЕРГОТАП ⚡ Накопи мегаватты!</title>
+    <title>РОССЕТИ | ЭНЕРГОТАП</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
         }
 
         body {
             min-height: 100vh;
-            background: linear-gradient(145deg, #0b1120 0%, #1a2639 100%);
+            background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -24,41 +24,58 @@
         .game-container {
             max-width: 500px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: white;
             border-radius: 48px;
             padding: 24px 20px 32px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 215, 0, 0.2) inset;
+            box-shadow: 0 25px 50px rgba(0, 90, 157, 0.2);
+            border: 1px solid rgba(0, 90, 157, 0.2);
+        }
+
+        /* Логотип */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+            border-bottom: 2px solid rgba(0, 90, 157, 0.1);
+        }
+
+        .logo-container svg {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .company-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #005a9d;
+            letter-spacing: 1px;
+            margin-top: 5px;
         }
 
         h1 {
-            font-size: 2.4rem;
+            font-size: 2.2rem;
             font-weight: 800;
             text-align: center;
-            color: #ffd700;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-            letter-spacing: 2px;
+            color: #005a9d;
             margin-bottom: 4px;
         }
 
         .subtitle {
             text-align: center;
-            color: #a0b3d9;
+            color: #666;
             font-size: 1rem;
             margin-bottom: 24px;
-            border-bottom: 1px dashed rgba(255,215,0,0.3);
+            border-bottom: 1px dashed rgba(0, 90, 157, 0.3);
             padding-bottom: 16px;
         }
 
         .energy-card {
-            background: linear-gradient(135deg, #1e2a47, #131d33);
+            background: linear-gradient(135deg, #f0f5fa, #e6ecf3);
             border-radius: 32px;
             padding: 20px;
             margin-bottom: 24px;
-            border: 1px solid #3a4a6e;
-            box-shadow: 0 10px 0 #0b121f;
+            border: 1px solid rgba(0, 90, 157, 0.3);
+            box-shadow: 0 10px 0 rgba(0, 90, 157, 0.2);
         }
 
         .stats-row {
@@ -66,17 +83,18 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
-            color: #ccd6f0;
+            color: #005a9d;
             font-size: 0.95rem;
         }
 
         .badge {
-            background: #2a3b5a;
+            background: rgba(0, 90, 157, 0.1);
             padding: 6px 14px;
             border-radius: 40px;
             font-size: 0.85rem;
-            color: #ffd700;
-            border: 1px solid #ffd70033;
+            color: #005a9d;
+            border: 1px solid rgba(0, 90, 157, 0.3);
+            font-weight: 600;
         }
 
         .megawatt-value {
@@ -84,26 +102,27 @@
             font-weight: 900;
             text-align: center;
             line-height: 1;
-            color: #ffd700;
-            text-shadow: 0 0 30px #ffd700;
+            color: #005a9d;
+            text-shadow: 0 0 20px rgba(0, 90, 157, 0.3);
             margin: 8px 0 4px;
             letter-spacing: 4px;
         }
 
         .mw-label {
             text-align: center;
-            color: #8096c0;
+            color: #005a9d;
             text-transform: uppercase;
             font-size: 0.9rem;
             letter-spacing: 3px;
             margin-bottom: 20px;
+            font-weight: 600;
         }
 
         .tap-button {
             width: 260px;
             height: 260px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+            background: radial-gradient(circle at 30% 30%, #005a9d, #003d6b);
             border: none;
             margin: 20px auto;
             display: flex;
@@ -111,65 +130,66 @@
             align-items: center;
             font-size: 3rem;
             font-weight: 900;
-            color: #1a1a2e;
+            color: white;
             text-transform: uppercase;
-            box-shadow: 0 20px 0 #7a5c00, 0 30px 40px rgba(0,0,0,0.6), 0 0 30px #ffd70080;
+            box-shadow: 0 20px 0 #002b4a, 0 30px 40px rgba(0, 90, 157, 0.4);
             transition: all 0.08s linear;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             touch-action: manipulation;
-            border: 4px solid #fff2b5;
+            border: 4px solid #80b5dc;
         }
 
         .tap-button:active {
             transform: translateY(15px);
-            box-shadow: 0 5px 0 #7a5c00, 0 20px 30px rgba(0,0,0,0.6), 0 0 40px #ffd700;
+            box-shadow: 0 5px 0 #002b4a, 0 20px 30px rgba(0, 90, 157, 0.4);
         }
 
         .user-info {
-            background: #0e1626;
+            background: #f0f5fa;
             border-radius: 50px;
             padding: 14px 18px;
             margin: 16px 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border: 1px solid #3d4f72;
+            border: 1px solid rgba(0, 90, 157, 0.3);
             font-size: 0.9rem;
         }
 
         .user-id-label {
-            color: #7185aa;
+            color: #005a9d;
+            font-weight: 600;
         }
 
         .user-id-value {
-            color: #ffd700;
-            font-family: monospace;
-            background: #1f2a3f;
+            color: #005a9d;
+            background: white;
             padding: 6px 12px;
             border-radius: 30px;
             max-width: 200px;
             overflow: hidden;
             text-overflow: ellipsis;
             font-size: 0.9rem;
+            border: 1px solid rgba(0, 90, 157, 0.3);
+            font-weight: 500;
         }
 
         .status-message {
-            background: #1d2a3e;
+            background: #f0f5fa;
             border-radius: 30px;
             padding: 12px 16px;
             margin-top: 16px;
             text-align: center;
             font-size: 0.95rem;
-            border-left: 4px solid #ffd700;
-            color: #b0c4e0;
-            transition: all 0.3s;
+            border-left: 4px solid #005a9d;
+            color: #333;
         }
 
         .tap-hint {
             text-align: center;
-            color: #62779b;
+            color: #666;
             font-size: 0.85rem;
             margin-top: 8px;
             display: flex;
@@ -179,10 +199,10 @@
 
         footer {
             text-align: center;
-            color: #354668;
+            color: #999;
             font-size: 0.7rem;
             margin-top: 24px;
-            border-top: 1px solid #1f2b40;
+            border-top: 1px solid rgba(0, 90, 157, 0.1);
             padding-top: 16px;
         }
 
@@ -206,60 +226,60 @@
         }
 
         .modal-content {
-            background: linear-gradient(135deg, #1e2a47, #131d33);
-            border: 2px solid #ffd700;
+            background: white;
+            border: 2px solid #005a9d;
             border-radius: 48px;
             padding: 40px;
             max-width: 400px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 50px rgba(0, 90, 157, 0.3);
         }
 
         .modal-content h2 {
-            color: #ffd700;
+            color: #005a9d;
             font-size: 2rem;
             margin-bottom: 20px;
         }
 
         .modal-content p {
-            color: #a0b3d9;
+            color: #666;
             margin-bottom: 30px;
         }
 
         .name-input {
             width: 100%;
             padding: 15px 20px;
-            background: #0e1626;
-            border: 2px solid #ffd700;
+            background: #f0f5fa;
+            border: 2px solid #005a9d;
             border-radius: 40px;
-            color: white;
+            color: #333;
             font-size: 1.1rem;
             margin-bottom: 20px;
             outline: none;
         }
 
         .name-input:focus {
-            border-color: #ffaa00;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            border-color: #003d6b;
+            box-shadow: 0 0 20px rgba(0, 90, 157, 0.3);
         }
 
         .save-btn {
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            background: #005a9d;
             border: none;
-            color: #0a0f1e;
+            color: white;
             padding: 15px 40px;
             border-radius: 40px;
             font-weight: 800;
             font-size: 1.2rem;
             cursor: pointer;
             transition: all 0.3s;
-            border: 1px solid #ffd700;
+            border: 1px solid #005a9d;
         }
 
         .save-btn:hover {
+            background: #003d6b;
             transform: scale(1.05);
-            box-shadow: 0 0 20px gold;
         }
 
         @media (max-width: 400px) {
@@ -279,13 +299,22 @@
     <div class="modal" id="nameModal">
         <div class="modal-content">
             <h2>⚡ ДОБРО ПОЖАЛОВАТЬ!</h2>
-            <p>Введите ваше имя для участия в соревновании</p>
+            <p>Введите ваше имя для участия</p>
             <input type="text" class="name-input" id="userNameInput" placeholder="Ваше имя" maxlength="20">
-            <button class="save-btn" onclick="saveUserName()">НАЧАТЬ ТАПАТЬ</button>
+            <button class="save-btn" onclick="saveUserName()">НАЧАТЬ</button>
         </div>
     </div>
 
     <div class="game-container">
+        <!-- Логотип компании -->
+        <div class="logo-container">
+            <svg width="180" height="60" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="10" width="60" height="60" fill="#005a9d" rx="12"/>
+                <text x="90" y="45" font-family="Arial" font-weight="bold" font-size="28" fill="#005a9d">РОССЕТИ</text>
+                <text x="90" y="65" font-family="Arial" font-size="16" fill="#666">МОСКОВСКИЙ РЕГИОН</text>
+            </svg>
+        </div>
+        
         <h1>⚡ ЭНЕРГОТАП</h1>
         <div class="subtitle">Выработка электроэнергии</div>
         
@@ -323,79 +352,53 @@
     </div>
 
     <script>
-        // ⚡ ВАШ URL ИЗ ШАГА 2
         const API_URL = 'https://script.google.com/macros/s/AKfycbzMGV1nL9tpP4fm7P3oeHbVEmsoWZfpXlLriGJ8hsY3uGFvwBkqSic90ZBJaqAA9NRH/exec';
         const SAVE_INTERVAL = 5;
         
-        // Проверяем, есть ли уже сохраненное имя
         let userName = localStorage.getItem('energyTap_userName');
         let userId = localStorage.getItem('energyTap_userId');
         
-        // Если нет имени - показываем модальное окно
         if (!userName) {
             document.getElementById('nameModal').classList.add('active');
-            // Генерируем временный ID, но имя еще не сохраняем
             if (!userId) {
                 userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
                 localStorage.setItem('energyTap_userId', userId);
             }
         } else {
-            // Если имя есть - запускаем игру
             initializeGame();
         }
         
         function saveUserName() {
-            const nameInput = document.getElementById('userNameInput');
-            const name = nameInput.value.trim();
+            const name = document.getElementById('userNameInput').value.trim();
+            if (!name) { alert('Введите имя'); return; }
             
-            if (!name) {
-                alert('Пожалуйста, введите ваше имя');
-                return;
-            }
-            
-            // Сохраняем имя
             userName = name;
             localStorage.setItem('energyTap_userName', userName);
             
-            // Если еще нет userId, создаем
             if (!userId) {
                 userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
                 localStorage.setItem('energyTap_userId', userId);
             }
             
-            // Закрываем модальное окно
             document.getElementById('nameModal').classList.remove('active');
-            
-            // Запускаем игру
             initializeGame();
             
-            // Отправляем имя на сервер при первом запуске
-            setTimeout(() => {
-                if (counter > 0) sendTapsToServer(counter);
-            }, 1000);
+            if (window.counter > 0) sendTapsToServer(window.counter);
         }
         
         function initializeGame() {
-            // Показываем имя на странице
-            document.getElementById('userNameDisplay').textContent = userName || 'Участник';
-            
-            // Загружаем счетчик
-            counter = parseInt(localStorage.getItem('energyTap_counter_' + userId)) || 0;
-            lastSavedCounter = counter;
-            document.getElementById('counter').innerText = counter;
-            
-            // Отправляем текущее значение на сервер при загрузке
-            if (counter > 0) {
-                setTimeout(() => sendTapsToServer(counter), 1000);
-            }
+            document.getElementById('userNameDisplay').textContent = userName;
+            window.counter = parseInt(localStorage.getItem('energyTap_counter_' + userId)) || 0;
+            document.getElementById('counter').innerText = window.counter;
+            window.lastSavedCounter = window.counter;
         }
         
-        let counter = 0;
-        let lastSavedCounter = 0;
+        window.counter = 0;
+        window.lastSavedCounter = 0;
         
         async function sendTapsToServer(tapsValue) {
             const statusEl = document.getElementById('statusMessage');
-            statusEl.innerText = '⏳ Отправка данных...';
+            statusEl.innerText = '⏳ Отправка...';
             
             try {
                 await fetch(API_URL, {
@@ -406,29 +409,27 @@
                         userId: userId,
                         userName: userName || 'Аноним',
                         taps: tapsValue,
-                        userAgent: navigator.userAgent.substring(0, 100),
                         timestamp: new Date().toISOString()
                     })
                 });
                 
-                lastSavedCounter = tapsValue;
+                window.lastSavedCounter = tapsValue;
                 localStorage.setItem('energyTap_counter_' + userId, tapsValue);
-                statusEl.innerText = '✅ Данные сохранены! Всего: ' + tapsValue + ' МВт';
-            } catch(error) {
-                statusEl.innerText = '❌ Ошибка, но данные сохранены локально';
+                statusEl.innerText = '✅ Сохранено! ' + tapsValue + ' МВт';
+            } catch(e) {
+                statusEl.innerText = '❌ Ошибка';
             }
         }
         
         function handleTap() {
-            // Если имя еще не введено - показываем модальное окно
             if (!userName) {
                 document.getElementById('nameModal').classList.add('active');
                 return;
             }
             
-            counter++;
-            document.getElementById('counter').innerText = counter;
-            localStorage.setItem('energyTap_counter_' + userId, counter);
+            window.counter++;
+            document.getElementById('counter').innerText = window.counter;
+            localStorage.setItem('energyTap_counter_' + userId, window.counter);
             
             if (navigator.vibrate) navigator.vibrate(20);
             
@@ -436,10 +437,10 @@
             btn.style.transform = 'scale(0.92)';
             setTimeout(() => btn.style.transform = 'scale(1)', 80);
             
-            if (counter % SAVE_INTERVAL === 0) {
-                sendTapsToServer(counter);
+            if (window.counter % SAVE_INTERVAL === 0) {
+                sendTapsToServer(window.counter);
             } else {
-                document.getElementById('statusMessage').innerText = `⚡ +1 МВт! Всего: ${counter}`;
+                document.getElementById('statusMessage').innerText = `⚡ +1! Всего: ${window.counter}`;
             }
         }
     </script>
