@@ -40,11 +40,9 @@
             border-bottom: 2px solid rgba(0, 90, 157, 0.1);
         }
 
-        .company-name {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #005a9d;
-            margin-top: 10px;
+        .logo-container img {
+            max-width: 250px;
+            height: auto;
         }
 
         .header {
@@ -296,6 +294,12 @@
             gap: 20px;
         }
 
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
         .update-time {
             display: flex;
             align-items: center;
@@ -324,6 +328,27 @@
             transform: scale(1.05);
         }
 
+        .reset-btn {
+            background: #dc3545;
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            border: 1px solid #dc3545;
+            font-size: 1rem;
+        }
+
+        .reset-btn:hover {
+            background: #bb2d3b;
+            transform: scale(1.05);
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -342,14 +367,20 @@
                 grid-template-columns: 50px 1fr 100px 50px;
                 padding: 12px 15px;
             }
+            .footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .button-group {
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Логотип компании -->
         <div class="logo-container">
-            <img src="log_PNG.png" alt="Россети Московский регион" style="max-width: 300px; height: auto; margin-bottom: 15px;">
+            <img src="log_PNG_white.png" alt="Россети Московский регион">
         </div>
 
         <div class="header">
@@ -396,14 +427,20 @@
             <div class="update-time" id="updateTime">
                 <i class="far fa-clock"></i> Обновление...
             </div>
-            <button class="refresh-btn" onclick="loadLeaderboard()">
-                <i class="fas fa-sync-alt"></i> ОБНОВИТЬ
-            </button>
+            <div class="button-group">
+                <button class="refresh-btn" onclick="loadLeaderboard()">
+                    <i class="fas fa-sync-alt"></i> ОБНОВИТЬ
+                </button>
+                <button class="reset-btn" onclick="resetData()">
+                    <i class="fas fa-trash"></i> СБРОСИТЬ ВСЁ
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzMGV1nL9tpP4fm7P3oeHbVEmsoWZfpXlLriGJ8hsY3uGFvwBkqSic90ZBJaqAA9NRH/exec';
+        // ⚡ НОВАЯ ССЫЛКА НА СКРИПТ
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxfzAPk70NgCYFxQP8KnHHUwmALjBD3INYlCRraSOMsWe01VodkMolW_IB1u3RdCo-D/exec';
 
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -491,6 +528,34 @@
                         Ошибка загрузки
                     </div>
                 `;
+            }
+        }
+
+        // Функция сброса данных
+        async function resetData() {
+            if (!confirm('⚠️ ВНИМАНИЕ! Это удалит ВСЕ данные об участниках. Продолжить?')) {
+                return;
+            }
+            
+            const statusEl = document.getElementById('updateTime');
+            const originalText = statusEl.innerHTML;
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Очистка...';
+            
+            try {
+                // Используем тот же URL с параметром reset
+                const response = await fetch(API_URL + '?reset=1&t=' + Date.now());
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Данные успешно очищены!');
+                    loadLeaderboard(); // перезагружаем таблицу
+                } else {
+                    alert('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                    statusEl.innerHTML = originalText;
+                }
+            } catch(error) {
+                alert('❌ Ошибка соединения с сервером');
+                statusEl.innerHTML = originalText;
             }
         }
 
