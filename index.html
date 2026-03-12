@@ -155,6 +155,12 @@
             font-weight: 600;
         }
 
+        .goal-badge {
+            background: #ffd700;
+            color: #005a9d;
+            font-weight: 800;
+        }
+
         .megawatt-value {
             font-size: 4rem;
             font-weight: 900;
@@ -176,6 +182,36 @@
             font-weight: 600;
         }
 
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 90, 157, 0.1);
+            border-radius: 30px;
+            overflow: hidden;
+            margin: 15px 0 10px;
+            border: 1px solid rgba(0, 90, 157, 0.3);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #005a9d, #ffd700);
+            transition: width 0.3s ease;
+            border-radius: 30px;
+        }
+
+        .goal-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .goal-text span {
+            font-weight: 800;
+            color: #005a9d;
+        }
+
         .tap-button {
             width: 240px;
             height: 240px;
@@ -191,7 +227,7 @@
             color: white;
             text-transform: uppercase;
             box-shadow: 0 12px 0 #002b4a, 0 20px 30px rgba(0, 90, 157, 0.4);
-            transition: transform 0.05s linear;
+            transition: transform 0.05s linear, opacity 0.3s ease;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
@@ -199,6 +235,29 @@
             border: 4px solid #80b5dc;
             position: relative;
             z-index: 5;
+        }
+
+        .tap-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+            background: radial-gradient(circle at 30% 30%, #999, #666);
+            box-shadow: 0 12px 0 #444, 0 20px 30px rgba(0,0,0,0.2);
+        }
+
+        .victory-message {
+            text-align: center;
+            color: #ffd700;
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin: 15px 0;
+            text-shadow: 0 0 20px #ffd700;
+            animation: victoryPulse 1.5s infinite;
+        }
+
+        @keyframes victoryPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .user-info {
@@ -240,6 +299,13 @@
             font-size: 0.9rem;
             border-left: 4px solid #005a9d;
             color: #333;
+        }
+
+        .status-message.victory {
+            border-left-color: #ffd700;
+            background: #fff9e6;
+            color: #005a9d;
+            font-weight: 600;
         }
 
         footer {
@@ -356,7 +422,7 @@
 
     <div class="game-container">
         <div class="logo-container">
-            <img src="log_PNG.png" alt="Россети Московский регион">
+            <img src="log_PNG_white.png" alt="Россети Московский регион">
         </div>
         
         <h1>⚡ ЭНЕРГОТАП</h1>
@@ -365,15 +431,29 @@
         <div class="energy-card">
             <div class="stats-row">
                 <span class="badge">⚡ накоплено</span>
-                <span class="badge">1 тап = 1 МВт</span>
+                <span class="badge goal-badge" id="goalBadge">0 / 10000 МВт</span>
             </div>
             <div class="megawatt-value" id="counter">0</div>
             <div class="mw-label">МЕГАВАТТ</div>
+            
+            <!-- Прогресс-бар -->
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="goal-text">
+                Цель: <span id="goalDisplay">0</span> / 10000 МВт
+            </div>
         </div>
         
+        <!-- Кнопка тапа (будет блокироваться) -->
         <button class="tap-button" id="tapBtn">
             ТАП
         </button>
+        
+        <!-- Сообщение о победе (появляется при 100%) -->
+        <div class="victory-message" id="victoryMessage" style="display: none;">
+            🎉 ЦЕЛЬ ДОСТИГНУТА! 🎉
+        </div>
         
         <div class="user-info">
             <span class="user-id-label">👤 УЧАСТНИК</span>
@@ -390,12 +470,13 @@
     </div>
 
     <script>
-        // ⚡ НОВАЯ ССЫЛКА НА СКРИПТ
         const API_URL = 'https://script.google.com/macros/s/AKfycbyr-oo1u-8WEdvBrJkR1RcRfAEC2lie69aSkxrPWy1KglJx9SWIolReclyTdxu3wAmk/exec';
         const SAVE_INTERVAL = 20;
+        const MAX_ENERGY = 100; // Максимум МВт (когда лампочка загорится на 100%)
         
         let userName = localStorage.getItem('energyTap_userName');
         let userId = localStorage.getItem('energyTap_userId');
+        let isGameActive = true; // Флаг, активна ли игра (достигнут ли максимум)
         
         function createTapAnimation() {
             const container = document.getElementById('animationContainer');
@@ -425,6 +506,32 @@
                 
                 container.appendChild(lightning);
                 setTimeout(() => lightning.remove(), 800);
+            }
+        }
+        
+        function updateProgress(currentValue) {
+            const percent = Math.min(100, (currentValue / MAX_ENERGY) * 100);
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('goalDisplay').textContent = currentValue;
+            document.getElementById('goalBadge').textContent = `${currentValue} / ${MAX_ENERGY} МВт`;
+            
+            // Проверяем, достигнут ли максимум
+            if (currentValue >= MAX_ENERGY) {
+                isGameActive = false;
+                document.getElementById('tapBtn').classList.add('disabled');
+                document.getElementById('victoryMessage').style.display = 'block';
+                document.getElementById('statusMessage').classList.add('victory');
+                document.getElementById('statusMessage').innerHTML = '🎉 ПОБЕДА! Цель достигнута! 🎉';
+                
+                // Финальная отправка данных
+                if (window.counter >= MAX_ENERGY) {
+                    sendTapsToServer(window.counter);
+                }
+            } else {
+                isGameActive = true;
+                document.getElementById('tapBtn').classList.remove('disabled');
+                document.getElementById('victoryMessage').style.display = 'none';
+                document.getElementById('statusMessage').classList.remove('victory');
             }
         }
         
@@ -459,6 +566,9 @@
             window.counter = parseInt(localStorage.getItem('energyTap_counter_' + userId)) || 0;
             document.getElementById('counter').innerText = window.counter;
             window.lastSavedCounter = window.counter;
+            
+            // Обновляем прогресс-бар при загрузке
+            updateProgress(window.counter);
         }
         
         window.counter = 0;
@@ -494,6 +604,21 @@
                 return;
             }
             
+            // Если игра не активна (достигнут максимум) - блокируем тапы
+            if (!isGameActive) {
+                return;
+            }
+            
+            // Проверяем, не превысит ли следующий тап максимум
+            if (window.counter + 1 > MAX_ENERGY) {
+                window.counter = MAX_ENERGY;
+                document.getElementById('counter').innerText = window.counter;
+                localStorage.setItem('energyTap_counter_' + userId, window.counter);
+                updateProgress(window.counter);
+                createTapAnimation();
+                return;
+            }
+            
             createTapAnimation();
             
             window.counter++;
@@ -515,10 +640,37 @@
             
             if (navigator.vibrate) navigator.vibrate(20);
             
+            // Обновляем прогресс-бар
+            updateProgress(window.counter);
+            
             if (window.counter % SAVE_INTERVAL === 0) {
                 sendTapsToServer(window.counter);
             } else {
                 document.getElementById('statusMessage').innerText = `⚡ +1! Всего: ${window.counter}`;
+            }
+        }
+
+        // Функция для синхронизации с сервером (получение общего прогресса)
+        async function syncWithServer() {
+            try {
+                const response = await fetch(API_URL + '?t=' + Date.now());
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    // Находим текущего пользователя в данных
+                    const currentUser = data.data.find(p => p.userId === userId);
+                    if (currentUser) {
+                        // Если на сервере больше тапов, чем локально - обновляем
+                        if (currentUser.taps > window.counter) {
+                            window.counter = currentUser.taps;
+                            document.getElementById('counter').innerText = window.counter;
+                            localStorage.setItem('energyTap_counter_' + userId, window.counter);
+                            updateProgress(window.counter);
+                        }
+                    }
+                }
+            } catch(e) {
+                console.log('Ошибка синхронизации');
             }
         }
 
@@ -527,6 +679,9 @@
             e.preventDefault();
             handleTap();
         });
+        
+        // Синхронизация с сервером каждые 10 секунд
+        setInterval(syncWithServer, 10000);
     </script>
 </body>
 </html>
