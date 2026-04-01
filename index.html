@@ -178,12 +178,11 @@
 
         .progress-bar-container {
             width: 100%;
-            height: 20px;
+            height: 12px;
             background: rgba(0, 90, 157, 0.1);
-            border-radius: 30px;
+            border-radius: 20px;
             overflow: hidden;
-            margin: 15px 0 10px;
-            border: 1px solid rgba(0, 90, 157, 0.3);
+            margin: 15px 0 5px;
         }
 
         .progress-bar {
@@ -191,16 +190,16 @@
             width: 0%;
             background: linear-gradient(90deg, #005a9d, #ffd700);
             transition: width 0.3s ease;
-            border-radius: 30px;
+            border-radius: 20px;
         }
 
         .tap-button {
-            width: 240px;
-            height: 240px;
+            width: 220px;
+            height: 220px;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, #005a9d, #003d6b);
             border: none;
-            margin: 10px auto 15px auto;
+            margin: 20px auto 25px auto;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -219,12 +218,16 @@
             z-index: 5;
         }
 
+        .tap-button:active {
+            transform: translateY(8px);
+        }
+
         .tap-button.disabled {
             opacity: 0.5;
             cursor: not-allowed;
             pointer-events: none;
             background: radial-gradient(circle at 30% 30%, #999, #666);
-            box-shadow: 0 12px 0 #444, 0 20px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 12px 0 #444;
         }
 
         .victory-message {
@@ -376,9 +379,9 @@
 
         @media (max-width: 400px) {
             .tap-button {
-                width: 200px;
-                height: 200px;
-                font-size: 2.3rem;
+                width: 180px;
+                height: 180px;
+                font-size: 2rem;
                 margin: 15px auto 20px auto;
             }
             .megawatt-value {
@@ -393,7 +396,6 @@
 <body>
     <div class="animation-container" id="animationContainer"></div>
 
-    <!-- Модальное окно всегда показывается при загрузке -->
     <div class="modal active" id="nameModal">
         <div class="modal-content">
             <h2>⚡ ДОБРО ПОЖАЛОВАТЬ!</h2>
@@ -417,15 +419,12 @@
             </div>
             <div class="megawatt-value" id="counter">0</div>
             <div class="mw-label">МЕГАВАТТ</div>
-            
             <div class="progress-bar-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
         </div>
         
-        <button class="tap-button" id="tapBtn" style="display: none;">
-            ТАП
-        </button>
+        <button class="tap-button disabled" id="tapBtn" style="display: none;">ТАП</button>
         
         <div class="victory-message" id="victoryMessage" style="display: none;">
             🎉 ЦЕЛЬ ДОСТИГНУТА! 🎉
@@ -433,11 +432,11 @@
         
         <div class="user-info" style="display: none;" id="userInfo">
             <span class="user-id-label">👤 УЧАСТНИК</span>
-            <span class="user-id-value" id="userNameDisplay"></span>
+            <span class="user-id-value" id="userNameDisplay">загрузка...</span>
         </div>
         
         <div class="status-message" id="statusMessage" style="display: none;">
-            👆 Тапай, чтобы вырабатывать мегаватты!
+            ⏳ Ожидание начала игры... ⏳
         </div>
         
         <footer style="display: none;" id="footer">
@@ -446,13 +445,14 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyr-oo1u-8WEdvBrJkR1RcRfAEC2lie69aSkxrPWy1KglJx9SWIolReclyTdxu3wAmk/exec';
-        const SAVE_INTERVAL = 30;
+        const API_URL = 'https://script.google.com/macros/library/d/1-6tE4D9gX7eliZQM24-V_4hb3I0BvIpv9BNcW0WsLf4tsqGVMi4sdlg6/5';
+        const SAVE_INTERVAL = 20;
         const MAX_ENERGY = 10000;
         
         let userName = '';
         let userId = '';
         let isGameActive = true;
+        let gameStarted = false;
         
         function createTapAnimation() {
             const container = document.getElementById('animationContainer');
@@ -495,47 +495,61 @@
                 document.getElementById('victoryMessage').style.display = 'block';
                 document.getElementById('statusMessage').classList.add('victory');
                 document.getElementById('statusMessage').innerHTML = '🎉 ПОБЕДА! Цель достигнута! 🎉';
-                
-                if (window.counter >= MAX_ENERGY) {
-                    sendTapsToServer(window.counter);
-                }
             } else {
                 isGameActive = true;
-                document.getElementById('tapBtn').classList.remove('disabled');
+                if (gameStarted && userName) {
+                    document.getElementById('tapBtn').classList.remove('disabled');
+                }
                 document.getElementById('victoryMessage').style.display = 'none';
                 document.getElementById('statusMessage').classList.remove('victory');
             }
         }
         
-        function saveUserName() {
-            const nameInput = document.getElementById('userNameInput');
-            const name = nameInput.value.trim();
-            
-            if (!name) {
-                alert('Пожалуйста, введите ваше имя');
-                return;
+        async function checkGameStatus() {
+            try {
+                const response = await fetch(API_URL + '?status=1&t=' + Date.now());
+                const data = await response.json();
+                
+                if (data.success) {
+                    gameStarted = data.active;
+                    
+                    if (gameStarted) {
+                        document.getElementById('statusMessage').innerHTML = '✅ ИГРА НАЧАЛАСЬ! Тапай! ✅';
+                        if (userName && isGameActive) {
+                            document.getElementById('tapBtn').classList.remove('disabled');
+                        }
+                    } else {
+                        document.getElementById('statusMessage').innerHTML = '⏳ Ожидание начала игры... ⏳';
+                        document.getElementById('tapBtn').classList.add('disabled');
+                    }
+                }
+            } catch(error) {
+                console.error('Ошибка проверки статуса:', error);
             }
+        }
+        
+        function saveUserName() {
+            const name = document.getElementById('userNameInput').value.trim();
+            if (!name) { alert('Введите имя'); return; }
             
             userName = name;
             userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
             
-            // Закрываем модальное окно
             document.getElementById('nameModal').classList.remove('active');
-            
-            // Показываем элементы игры
             document.getElementById('tapBtn').style.display = 'flex';
             document.getElementById('userInfo').style.display = 'flex';
             document.getElementById('statusMessage').style.display = 'block';
             document.getElementById('footer').style.display = 'block';
             
-            // Отображаем имя
             document.getElementById('userNameDisplay').textContent = userName;
             
-            // Инициализируем игру
             window.counter = 0;
             window.lastSavedCounter = 0;
             document.getElementById('counter').innerText = '0';
             updateProgress(0);
+            
+            checkGameStatus();
+            setInterval(checkGameStatus, 3000);
         }
         
         window.counter = 0;
@@ -565,22 +579,30 @@
         }
         
         function handleTap() {
-            if (!userName || !isGameActive) {
+            if (!userName) {
+                document.getElementById('nameModal').classList.add('active');
                 return;
             }
+            
+            if (!gameStarted) {
+                document.getElementById('statusMessage').innerHTML = '⏳ Игра ещё не началась! Ждите команды ведущего... ⏳';
+                return;
+            }
+            
+            if (!isGameActive) return;
+            
+            createTapAnimation();
             
             if (window.counter + 1 > MAX_ENERGY) {
                 window.counter = MAX_ENERGY;
                 document.getElementById('counter').innerText = window.counter;
                 updateProgress(window.counter);
-                createTapAnimation();
                 return;
             }
             
-            createTapAnimation();
-            
             window.counter++;
             document.getElementById('counter').innerText = window.counter;
+            updateProgress(window.counter);
             
             const counterEl = document.getElementById('counter');
             counterEl.classList.add('counter-pop');
@@ -596,8 +618,6 @@
             }, 300);
             
             if (navigator.vibrate) navigator.vibrate(20);
-            
-            updateProgress(window.counter);
             
             if (window.counter % SAVE_INTERVAL === 0) {
                 sendTapsToServer(window.counter);
