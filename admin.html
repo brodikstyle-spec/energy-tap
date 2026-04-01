@@ -130,6 +130,105 @@
             50% { opacity: 0.7; }
         }
 
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(0, 90, 157, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f0f5fa;
+            color: #666;
+            border: 1px solid transparent;
+        }
+
+        .tab.active {
+            background: #005a9d;
+            color: white;
+            border-color: #005a9d;
+        }
+
+        .tab-content {
+            display: none;
+            min-height: 400px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Лампочка */
+        .bulb-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f0f5fa, #e6ecf3);
+            border-radius: 60px;
+            border: 1px solid rgba(0, 90, 157, 0.2);
+        }
+
+        .bulb {
+            font-size: 12rem;
+            color: #ddd;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 10px rgba(0, 90, 157, 0.2));
+            margin-bottom: 30px;
+        }
+
+        .bulb.lit {
+            color: #ffd700;
+            filter: drop-shadow(0 0 30px #ffd700);
+            animation: bulbPulse 2s infinite;
+        }
+
+        @keyframes bulbPulse {
+            0%, 100% { filter: drop-shadow(0 0 30px #ffd700); }
+            50% { filter: drop-shadow(0 0 50px #ffaa00); }
+        }
+
+        .energy-bar-container {
+            width: 100%;
+            max-width: 500px;
+            height: 30px;
+            background: rgba(0, 90, 157, 0.1);
+            border-radius: 30px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 1px solid rgba(0, 90, 157, 0.3);
+        }
+
+        .energy-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #005a9d, #ffd700);
+            transition: width 0.5s ease;
+            border-radius: 30px;
+        }
+
+        .energy-percent {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #005a9d;
+        }
+
+        .bulb-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        /* Подиум */
         .podium {
             display: flex;
             justify-content: center;
@@ -202,6 +301,7 @@
             color: #666;
         }
 
+        /* Таблица */
         .table-container {
             background: #f8f8f8;
             border-radius: 30px;
@@ -404,18 +504,46 @@
             </div>
         </div>
 
-        <!-- Подиум с топ-3 -->
-        <div class="podium" id="podium"></div>
-
-        <!-- Таблица лидеров -->
-        <div class="table-container">
-            <div class="table-header">
-                <div>МЕСТО</div>
-                <div>УЧАСТНИК</div>
-                <div>МЕГАВАТТ</div>
-                <div>⚡</div>
+        <!-- Вкладки -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('bulb')">
+                <i class="fas fa-lightbulb"></i> Лампочка
             </div>
-            <div id="leaderboardRows"></div>
+            <div class="tab" onclick="switchTab('results')">
+                <i class="fas fa-trophy"></i> Результаты
+            </div>
+        </div>
+
+        <!-- Вкладка: Лампочка -->
+        <div id="bulbTab" class="tab-content active">
+            <div class="bulb-container">
+                <div class="bulb" id="bulbIcon">💡</div>
+                
+                <div class="energy-bar-container">
+                    <div class="energy-bar" id="energyBar"></div>
+                </div>
+                
+                <div class="energy-percent" id="energyPercent">0%</div>
+                
+                <div class="bulb-stats">
+                    <div><i class="fas fa-bolt"></i> <span id="bulbTotalMW">0</span> МВт</div>
+                    <div><i class="fas fa-users"></i> <span id="bulbTotalPlayers">0</span> уч.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка: Результаты -->
+        <div id="resultsTab" class="tab-content">
+            <div class="podium" id="podium"></div>
+            <div class="table-container">
+                <div class="table-header">
+                    <div>МЕСТО</div>
+                    <div>УЧАСТНИК</div>
+                    <div>МЕГАВАТТ</div>
+                    <div>⚡</div>
+                </div>
+                <div id="leaderboardRows"></div>
+            </div>
         </div>
 
         <div class="footer">
@@ -426,7 +554,7 @@
                 <button class="start-btn" id="startBtn" onclick="startGame()">
                     <i class="fas fa-play"></i> СТАРТ
                 </button>
-                <button class="refresh-btn" onclick="loadLeaderboard()">
+                <button class="refresh-btn" onclick="loadData()">
                     <i class="fas fa-sync-alt"></i> ОБНОВИТЬ
                 </button>
                 <button class="reset-btn" onclick="resetData()">
@@ -438,6 +566,9 @@
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbyr-oo1u-8WEdvBrJkR1RcRfAEC2lie69aSkxrPWy1KglJx9SWIolReclyTdxu3wAmk/exec';
+        const MAX_ENERGY = 100;
+        
+        let currentData = null;
 
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -445,6 +576,127 @@
 
         function getPlayerName(player) {
             return player.userName || player.userId || 'Аноним';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'bulb') {
+                document.querySelector('.tab').classList.add('active');
+                document.getElementById('bulbTab').classList.add('active');
+                if (currentData) updateBulbTab(currentData);
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('resultsTab').classList.add('active');
+                if (currentData) displayResults(currentData);
+            }
+        }
+
+        function updateBulbTab(players) {
+            const totalMW = players.reduce((sum, p) => sum + (p.taps || 0), 0);
+            const percent = Math.min(100, Math.round((totalMW / MAX_ENERGY) * 100));
+            
+            document.getElementById('bulbTotalMW').textContent = formatNumber(totalMW);
+            document.getElementById('bulbTotalPlayers').textContent = players.length;
+            document.getElementById('energyPercent').textContent = percent + '%';
+            document.getElementById('energyBar').style.width = percent + '%';
+            
+            const bulb = document.getElementById('bulbIcon');
+            if (percent > 0) {
+                bulb.classList.add('lit');
+            } else {
+                bulb.classList.remove('lit');
+            }
+        }
+
+        function displayResults(players) {
+            const totalPlayers = players.length;
+            const totalMW = players.reduce((sum, p) => sum + (p.taps || 0), 0);
+            
+            document.getElementById('totalPlayers').textContent = totalPlayers;
+            document.getElementById('totalMW').textContent = formatNumber(totalMW);
+            
+            // Подиум
+            let podiumHtml = '';
+            
+            if (players.length > 1) {
+                podiumHtml += `
+                    <div class="podium-card podium-2">
+                        <div class="podium-rank">2</div>
+                        <div class="podium-name">${getPlayerName(players[1])}</div>
+                        <div class="podium-score">${formatNumber(players[1]?.taps || 0)} <small>МВт</small></div>
+                    </div>
+                `;
+            } else {
+                podiumHtml += `
+                    <div class="podium-card podium-2">
+                        <div class="podium-rank">2</div>
+                        <div class="podium-name">—</div>
+                        <div class="podium-score">0 <small>МВт</small></div>
+                    </div>
+                `;
+            }
+            
+            if (players.length > 0) {
+                podiumHtml += `
+                    <div class="podium-card podium-1">
+                        <div class="crown">👑</div>
+                        <div class="podium-rank">1</div>
+                        <div class="podium-name">${getPlayerName(players[0])}</div>
+                        <div class="podium-score">${formatNumber(players[0]?.taps || 0)} <small>МВт</small></div>
+                    </div>
+                `;
+            } else {
+                podiumHtml += `
+                    <div class="podium-card podium-1">
+                        <div class="podium-rank">1</div>
+                        <div class="podium-name">—</div>
+                        <div class="podium-score">0 <small>МВт</small></div>
+                    </div>
+                `;
+            }
+            
+            if (players.length > 2) {
+                podiumHtml += `
+                    <div class="podium-card podium-3">
+                        <div class="podium-rank">3</div>
+                        <div class="podium-name">${getPlayerName(players[2])}</div>
+                        <div class="podium-score">${formatNumber(players[2]?.taps || 0)} <small>МВт</small></div>
+                    </div>
+                `;
+            } else {
+                podiumHtml += `
+                    <div class="podium-card podium-3">
+                        <div class="podium-rank">3</div>
+                        <div class="podium-name">—</div>
+                        <div class="podium-score">0 <small>МВт</small></div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('podium').innerHTML = podiumHtml;
+            
+            // Таблица
+            const otherPlayers = players.slice(3);
+            const rowsHtml = otherPlayers.map((player, index) => {
+                const rank = index + 4;
+                const avatarSymbol = getPlayerName(player).charAt(0).toUpperCase() || '⚡';
+                
+                return `
+                    <div class="table-row">
+                        <div class="rank">${rank}</div>
+                        <div class="user-info">
+                            <div class="avatar">${avatarSymbol}</div>
+                            <span class="username">${getPlayerName(player)}</span>
+                        </div>
+                        <div class="score">${formatNumber(player.taps || 0)}</div>
+                        <div class="trend">⚡</div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('leaderboardRows').innerHTML = rowsHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных</div>';
         }
 
         async function startGame() {
@@ -461,7 +713,7 @@
                     startBtn.innerHTML = '<i class="fas fa-check"></i> ИДЁТ ИГРА';
                     startBtn.classList.add('disabled');
                     startBtn.disabled = true;
-                    loadLeaderboard();
+                    loadData();
                 } else {
                     alert('❌ Ошибка: ' + (data.error || 'Не удалось запустить игру'));
                     startBtn.innerHTML = '<i class="fas fa-play"></i> СТАРТ';
@@ -474,109 +726,24 @@
             }
         }
 
-        async function loadLeaderboard() {
+        async function loadData() {
             try {
                 const response = await fetch(API_URL + '?t=' + Date.now());
                 const data = await response.json();
                 
                 if (data.success && data.data) {
-                    const players = data.data;
-                    const totalPlayers = players.length;
-                    const totalMW = players.reduce((sum, p) => sum + (p.taps || 0), 0);
+                    currentData = data.data;
                     
-                    document.getElementById('totalPlayers').textContent = totalPlayers;
-                    document.getElementById('totalMW').textContent = formatNumber(totalMW);
-                    
-                    // Подиум
-                    let podiumHtml = '';
-                    
-                    if (players.length > 1) {
-                        podiumHtml += `
-                            <div class="podium-card podium-2">
-                                <div class="podium-rank">2</div>
-                                <div class="podium-name">${getPlayerName(players[1])}</div>
-                                <div class="podium-score">${formatNumber(players[1]?.taps || 0)} <small>МВт</small></div>
-                            </div>
-                        `;
+                    if (document.getElementById('bulbTab').classList.contains('active')) {
+                        updateBulbTab(currentData);
                     } else {
-                        podiumHtml += `
-                            <div class="podium-card podium-2">
-                                <div class="podium-rank">2</div>
-                                <div class="podium-name">—</div>
-                                <div class="podium-score">0 <small>МВт</small></div>
-                            </div>
-                        `;
+                        displayResults(currentData);
                     }
                     
-                    if (players.length > 0) {
-                        podiumHtml += `
-                            <div class="podium-card podium-1">
-                                <div class="crown">👑</div>
-                                <div class="podium-rank">1</div>
-                                <div class="podium-name">${getPlayerName(players[0])}</div>
-                                <div class="podium-score">${formatNumber(players[0]?.taps || 0)} <small>МВт</small></div>
-                            </div>
-                        `;
-                    } else {
-                        podiumHtml += `
-                            <div class="podium-card podium-1">
-                                <div class="podium-rank">1</div>
-                                <div class="podium-name">—</div>
-                                <div class="podium-score">0 <small>МВт</small></div>
-                            </div>
-                        `;
-                    }
-                    
-                    if (players.length > 2) {
-                        podiumHtml += `
-                            <div class="podium-card podium-3">
-                                <div class="podium-rank">3</div>
-                                <div class="podium-name">${getPlayerName(players[2])}</div>
-                                <div class="podium-score">${formatNumber(players[2]?.taps || 0)} <small>МВт</small></div>
-                            </div>
-                        `;
-                    } else {
-                        podiumHtml += `
-                            <div class="podium-card podium-3">
-                                <div class="podium-rank">3</div>
-                                <div class="podium-name">—</div>
-                                <div class="podium-score">0 <small>МВт</small></div>
-                            </div>
-                        `;
-                    }
-                    
-                    document.getElementById('podium').innerHTML = podiumHtml;
-                    
-                    // Таблица (остальные участники)
-                    const otherPlayers = players.slice(3);
-                    const rowsHtml = otherPlayers.map((player, index) => {
-                        const rank = index + 4;
-                        const avatarSymbol = getPlayerName(player).charAt(0).toUpperCase() || '⚡';
-                        
-                        return `
-                            <div class="table-row">
-                                <div class="rank">${rank}</div>
-                                <div class="user-info">
-                                    <div class="avatar">${avatarSymbol}</div>
-                                    <span class="username">${getPlayerName(player)}</span>
-                                </div>
-                                <div class="score">${formatNumber(player.taps || 0)}</div>
-                                <div class="trend">⚡</div>
-                            </div>
-                        `;
-                    }).join('');
-                    
-                    document.getElementById('leaderboardRows').innerHTML = rowsHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных</div>';
                     document.getElementById('updateTime').innerHTML = `<i class="far fa-clock"></i> Обновлено: ${new Date().toLocaleTimeString()}`;
                 }
             } catch(error) {
                 console.error('Ошибка:', error);
-                document.getElementById('leaderboardRows').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle" style="color:#ff6b6b"></i><br>
-                        Ошибка загрузки
-                    </div>
-                `;
             }
         }
 
@@ -593,12 +760,11 @@
                 
                 if (data.success) {
                     alert('✅ Данные очищены, игра остановлена');
-                    // Сбрасываем кнопку старта
                     const startBtn = document.getElementById('startBtn');
                     startBtn.innerHTML = '<i class="fas fa-play"></i> СТАРТ';
                     startBtn.classList.remove('disabled');
                     startBtn.disabled = false;
-                    loadLeaderboard();
+                    loadData();
                 } else {
                     alert('❌ Ошибка: ' + (data.error || 'Неизвестная ошибка'));
                     statusEl.innerHTML = originalText;
@@ -609,8 +775,8 @@
             }
         }
 
-        loadLeaderboard();
-        setInterval(loadLeaderboard, 5000);
+        loadData();
+        setInterval(loadData, 5000);
     </script>
 </body>
 </html>
