@@ -566,7 +566,7 @@
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbyr-oo1u-8WEdvBrJkR1RcRfAEC2lie69aSkxrPWy1KglJx9SWIolReclyTdxu3wAmk/exec';
-        const MAX_ENERGY = 100;
+        const MAX_ENERGY = 10000;
         
         let currentData = null;
 
@@ -617,7 +617,7 @@
             document.getElementById('totalPlayers').textContent = totalPlayers;
             document.getElementById('totalMW').textContent = formatNumber(totalMW);
             
-            // Подиум
+            // Подиум для топ-3
             let podiumHtml = '';
             
             if (players.length > 1) {
@@ -677,9 +677,10 @@
             
             document.getElementById('podium').innerHTML = podiumHtml;
             
-            // Таблица
-            const otherPlayers = players.slice(3);
-            const rowsHtml = otherPlayers.map((player, index) => {
+            // 🔥 ТАБЛИЦА: ТОП-5 (места 4 и 5)
+            const tablePlayers = players.slice(3, 5);
+            
+            const rowsHtml = tablePlayers.map((player, index) => {
                 const rank = index + 4;
                 const avatarSymbol = getPlayerName(player).charAt(0).toUpperCase() || '⚡';
                 
@@ -696,7 +697,24 @@
                 `;
             }).join('');
             
-            document.getElementById('leaderboardRows').innerHTML = rowsHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных</div>';
+            // Пустые строки, если участников меньше 5
+            const emptyRows = 2 - tablePlayers.length;
+            let emptyHtml = '';
+            for (let i = 0; i < emptyRows; i++) {
+                emptyHtml += `
+                    <div class="table-row">
+                        <div class="rank">${4 + tablePlayers.length + i}</div>
+                        <div class="user-info">
+                            <div class="avatar">—</div>
+                            <span class="username">—</span>
+                        </div>
+                        <div class="score">0</div>
+                        <div class="trend">⚡</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('leaderboardRows').innerHTML = rowsHtml + emptyHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных</div>';
         }
 
         async function startGame() {
@@ -751,7 +769,6 @@
             if (!confirm('⚠️ Удалить все данные и остановить игру? Продолжить?')) return;
             
             const statusEl = document.getElementById('updateTime');
-            const originalText = statusEl.innerHTML;
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Очистка...';
             
             try {
