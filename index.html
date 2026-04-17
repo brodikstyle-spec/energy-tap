@@ -415,7 +415,7 @@
         
         <div class="energy-card">
             <div class="stats-row">
-                <span class="badge">⚡ накоплено</span>
+                <span class="badge">⚡ общая энергия</span>
             </div>
             <div class="megawatt-value" id="counter">0</div>
             <div class="mw-label">МЕГАВАТТ</div>
@@ -447,13 +447,14 @@
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbyr-oo1u-8WEdvBrJkR1RcRfAEC2lie69aSkxrPWy1KglJx9SWIolReclyTdxu3wAmk/exec';
         const SAVE_INTERVAL = 20;
-        const MAX_ENERGY = 1000;
+        const MAX_ENERGY = 1000; // Общая цель для всех участников
         
         let userName = '';
         let userId = '';
-        let isGameActive = true;
         let gameStarted = false;
+        let totalEnergy = 0; // Общая энергия с сервера
         
+        // Функция анимации молний
         function createTapAnimation() {
             const container = document.getElementById('animationContainer');
             const button = document.getElementById('tapBtn');
@@ -485,26 +486,36 @@
             }
         }
         
-        function updateProgress(currentValue) {
-            const percent = Math.min(100, (currentValue / MAX_ENERGY) * 100);
+        // Обновление прогресс-бара и блокировка кнопки при достижении цели
+        function updateProgress() {
+            const percent = Math.min(100, Math.round((totalEnergy / MAX_ENERGY) * 100));
             document.getElementById('progressBar').style.width = percent + '%';
             
-            if (currentValue >= MAX_ENERGY) {
-                isGameActive = false;
+            if (totalEnergy >= MAX_ENERGY) {
                 document.getElementById('tapBtn').classList.add('disabled');
                 document.getElementById('victoryMessage').style.display = 'block';
                 document.getElementById('statusMessage').classList.add('victory');
                 document.getElementById('statusMessage').innerHTML = '🎉 ПОБЕДА! Цель достигнута! 🎉';
-            } else {
-                isGameActive = true;
-                if (gameStarted && userName) {
-                    document.getElementById('tapBtn').classList.remove('disabled');
-                }
-                document.getElementById('victoryMessage').style.display = 'none';
-                document.getElementById('statusMessage').classList.remove('victory');
             }
         }
         
+        // Запрос общей энергии с сервера
+        async function fetchTotalEnergy() {
+            try {
+                const response = await fetch(API_URL + '?t=' + Date.now());
+                const data = await response.json();
+                if (data.success && data.data) {
+                    const newTotal = data.data.reduce((sum, p) => sum + (p.taps || 0), 0);
+                    totalEnergy = newTotal;
+                    document.getElementById('counter').innerText = totalEnergy;
+                    updateProgress();
+                }
+            } catch(error) {
+                console.error('Ошибка получения общей энергии:', error);
+            }
+        }
+        
+        // Проверка статуса игры (началась ли)
         async function checkGameStatus() {
             try {
                 const response = await fetch(API_URL + '?status=1&t=' + Date.now());
@@ -515,7 +526,7 @@
                     
                     if (gameStarted) {
                         document.getElementById('statusMessage').innerHTML = '✅ ИГРА НАЧАЛАСЬ! Тапай! ✅';
-                        if (userName && isGameActive) {
+                        if (totalEnergy < MAX_ENERGY && userName) {
                             document.getElementById('tapBtn').classList.remove('disabled');
                         }
                     } else {
@@ -528,6 +539,7 @@
             }
         }
         
+        // Сохранение имени и инициализация
         function saveUserName() {
             const name = document.getElementById('userNameInput').value.trim();
             if (!name) { alert('Введите имя'); return; }
@@ -543,18 +555,20 @@
             
             document.getElementById('userNameDisplay').textContent = userName;
             
-            window.counter = 0;
+            window.personalCounter = 0;
             window.lastSavedCounter = 0;
-            document.getElementById('counter').innerText = '0';
-            updateProgress(0);
             
+            // Запускаем периодическое обновление
+            fetchTotalEnergy();
+            setInterval(fetchTotalEnergy, 5000);
             checkGameStatus();
             setInterval(checkGameStatus, 3000);
         }
         
-        window.counter = 0;
+        window.personalCounter = 0;
         window.lastSavedCounter = 0;
         
+        // Отправка личного прогресса на сервер
         async function sendTapsToServer(tapsValue) {
             const statusEl = document.getElementById('statusMessage');
             statusEl.innerText = '⏳ Отправка...';
@@ -572,12 +586,13 @@
                 });
                 
                 window.lastSavedCounter = tapsValue;
-                statusEl.innerText = '✅ Сохранено! ' + tapsValue + ' МВт';
+                statusEl.innerText = '✅ Сохранено! Личный вклад: ' + tapsValue + ' МВт';
             } catch(e) {
                 statusEl.innerText = '❌ Ошибка';
             }
         }
         
+        // Обработка тапа
         function handleTap() {
             if (!userName) {
                 document.getElementById('nameModal').classList.add('active');
@@ -589,25 +604,21 @@
                 return;
             }
             
-            if (!isGameActive) return;
-            
-            createTapAnimation();
-            
-            if (window.counter + 1 > MAX_ENERGY) {
-                window.counter = MAX_ENERGY;
-                document.getElementById('counter').innerText = window.counter;
-                updateProgress(window.counter);
+            if (totalEnergy >= MAX_ENERGY) {
                 return;
             }
             
-            window.counter++;
-            document.getElementById('counter').innerText = window.counter;
-            updateProgress(window.counter);
+            createTapAnimation();
             
-            const counterEl = document.getElementById('counter');
-            counterEl.classList.add('counter-pop');
-            setTimeout(() => counterEl.classList.remove('counter-pop'), 200);
+            window.personalCounter++;
             
+            if (window.personalCounter % SAVE_INTERVAL === 0) {
+                sendTapsToServer(window.personalCounter);
+            } else {
+                document.getElementById('statusMessage').innerText = `⚡ +1! Ваш вклад: ${window.personalCounter} МВт`;
+            }
+            
+            // Анимация кнопки
             const btn = document.getElementById('tapBtn');
             btn.classList.add('button-press');
             btn.classList.add('button-pulse');
@@ -618,12 +629,6 @@
             }, 300);
             
             if (navigator.vibrate) navigator.vibrate(20);
-            
-            if (window.counter % SAVE_INTERVAL === 0) {
-                sendTapsToServer(window.counter);
-            } else {
-                document.getElementById('statusMessage').innerText = `⚡ +1! Всего: ${window.counter}`;
-            }
         }
 
         document.getElementById('tapBtn').addEventListener('click', handleTap);
