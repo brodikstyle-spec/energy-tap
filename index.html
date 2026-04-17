@@ -130,19 +130,10 @@
         .energy-card {
             background: linear-gradient(135deg, #f0f5fa, #e6ecf3);
             border-radius: 32px;
-            padding: 16px;
+            padding: 20px 16px;
             margin-bottom: 5px;
             border: 1px solid rgba(0, 90, 157, 0.3);
             box-shadow: 0 6px 0 rgba(0, 90, 157, 0.2);
-        }
-
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            color: #005a9d;
-            font-size: 0.9rem;
         }
 
         .badge {
@@ -153,9 +144,11 @@
             color: #005a9d;
             border: 1px solid rgba(0, 90, 157, 0.3);
             font-weight: 600;
+            display: inline-block;
+            margin-bottom: 10px;
         }
 
-        .megawatt-value {
+        .personal-value {
             font-size: 4rem;
             font-weight: 900;
             text-align: center;
@@ -166,23 +159,24 @@
             letter-spacing: 4px;
         }
 
-        .mw-label {
+        .personal-label {
             text-align: center;
             color: #005a9d;
             text-transform: uppercase;
             font-size: 0.85rem;
             letter-spacing: 3px;
-            margin-bottom: 5px;
+            margin-bottom: 15px;
             font-weight: 600;
         }
 
+        /* Прогресс-бар (общий прогресс без текста) */
         .progress-bar-container {
             width: 100%;
             height: 12px;
             background: rgba(0, 90, 157, 0.1);
             border-radius: 20px;
             overflow: hidden;
-            margin: 15px 0 5px;
+            margin: 10px 0 5px;
         }
 
         .progress-bar {
@@ -384,8 +378,8 @@
                 font-size: 2rem;
                 margin: 15px auto 20px auto;
             }
-            .megawatt-value {
-                font-size: 3.5rem;
+            .personal-value {
+                font-size: 3rem;
             }
             .logo-container img {
                 max-width: 180px;
@@ -414,11 +408,13 @@
         <div class="subtitle">Выработка электроэнергии</div>
         
         <div class="energy-card">
-            <div class="stats-row">
-                <span class="badge">⚡ общая энергия</span>
+            <div>
+                <span class="badge">📊 ВАШ ВКЛАД</span>
             </div>
-            <div class="megawatt-value" id="counter">0</div>
-            <div class="mw-label">МЕГАВАТТ</div>
+            <div class="personal-value" id="personalCounter">0</div>
+            <div class="personal-label">МЕГАВАТТ</div>
+            
+            <!-- Только прогресс-бар, без текста "Общая энергия команды" -->
             <div class="progress-bar-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
@@ -453,6 +449,8 @@
         let userId = '';
         let gameStarted = false;
         let totalEnergy = 0; // Общая энергия с сервера
+        let personalCounter = 0; // Личный счётчик участника
+        let lastSavedPersonal = 0;
         
         // Функция анимации молний
         function createTapAnimation() {
@@ -487,7 +485,7 @@
         }
         
         // Обновление прогресс-бара и блокировка кнопки при достижении цели
-        function updateProgress() {
+        function updateTotalDisplay() {
             const percent = Math.min(100, Math.round((totalEnergy / MAX_ENERGY) * 100));
             document.getElementById('progressBar').style.width = percent + '%';
             
@@ -507,8 +505,7 @@
                 if (data.success && data.data) {
                     const newTotal = data.data.reduce((sum, p) => sum + (p.taps || 0), 0);
                     totalEnergy = newTotal;
-                    document.getElementById('counter').innerText = totalEnergy;
-                    updateProgress();
+                    updateTotalDisplay();
                 }
             } catch(error) {
                 console.error('Ошибка получения общей энергии:', error);
@@ -547,6 +544,14 @@
             userName = name;
             userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
             
+            // Загружаем сохранённый личный счётчик
+            const savedPersonal = localStorage.getItem('energyTap_personal_' + userId);
+            if (savedPersonal) {
+                personalCounter = parseInt(savedPersonal) || 0;
+                lastSavedPersonal = personalCounter;
+                document.getElementById('personalCounter').innerText = personalCounter;
+            }
+            
             document.getElementById('nameModal').classList.remove('active');
             document.getElementById('tapBtn').style.display = 'flex';
             document.getElementById('userInfo').style.display = 'flex';
@@ -555,18 +560,12 @@
             
             document.getElementById('userNameDisplay').textContent = userName;
             
-            window.personalCounter = 0;
-            window.lastSavedCounter = 0;
-            
             // Запускаем периодическое обновление
             fetchTotalEnergy();
             setInterval(fetchTotalEnergy, 5000);
             checkGameStatus();
             setInterval(checkGameStatus, 3000);
         }
-        
-        window.personalCounter = 0;
-        window.lastSavedCounter = 0;
         
         // Отправка личного прогресса на сервер
         async function sendTapsToServer(tapsValue) {
@@ -585,8 +584,8 @@
                     })
                 });
                 
-                window.lastSavedCounter = tapsValue;
-                statusEl.innerText = '✅ Сохранено! Личный вклад: ' + tapsValue + ' МВт';
+                lastSavedPersonal = tapsValue;
+                statusEl.innerText = '✅ Сохранено! Ваш вклад: ' + tapsValue + ' МВт';
             } catch(e) {
                 statusEl.innerText = '❌ Ошибка';
             }
@@ -610,13 +609,15 @@
             
             createTapAnimation();
             
-            window.personalCounter++;
+            // Увеличиваем личный счётчик
+            personalCounter++;
+            document.getElementById('personalCounter').innerText = personalCounter;
+            localStorage.setItem('energyTap_personal_' + userId, personalCounter);
             
-            if (window.personalCounter % SAVE_INTERVAL === 0) {
-                sendTapsToServer(window.personalCounter);
-            } else {
-                document.getElementById('statusMessage').innerText = `⚡ +1! Ваш вклад: ${window.personalCounter} МВт`;
-            }
+            // Анимация личного счётчика
+            const counterEl = document.getElementById('personalCounter');
+            counterEl.classList.add('counter-pop');
+            setTimeout(() => counterEl.classList.remove('counter-pop'), 200);
             
             // Анимация кнопки
             const btn = document.getElementById('tapBtn');
@@ -629,6 +630,13 @@
             }, 300);
             
             if (navigator.vibrate) navigator.vibrate(20);
+            
+            // Отправка на сервер по интервалу
+            if (personalCounter % SAVE_INTERVAL === 0) {
+                sendTapsToServer(personalCounter);
+            } else {
+                document.getElementById('statusMessage').innerText = `⚡ +1! Ваш вклад: ${personalCounter} МВт`;
+            }
         }
 
         document.getElementById('tapBtn').addEventListener('click', handleTap);
