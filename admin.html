@@ -400,7 +400,7 @@
             flex-wrap: wrap;
         }
 
-        .refresh-btn, .reset-btn, .start-btn {
+        .refresh-btn, .reset-btn, .start-btn, .stop-btn {
             padding: 12px 25px;
             border-radius: 40px;
             font-weight: 700;
@@ -428,13 +428,22 @@
             color: white;
         }
 
+        .stop-btn {
+            background: #ffc107;
+            color: #333;
+        }
+
         .start-btn.disabled {
             background: #95a5a6;
             cursor: not-allowed;
         }
 
-        .refresh-btn:hover:not(:disabled), .reset-btn:hover, .start-btn:hover:not(.disabled) {
+        .refresh-btn:hover:not(:disabled), .reset-btn:hover, .start-btn:hover:not(.disabled), .stop-btn:hover {
             transform: scale(1.05);
+        }
+
+        .stop-btn:hover {
+            background: #e0a800;
         }
 
         .update-time {
@@ -554,6 +563,9 @@
                 <button class="start-btn" id="startBtn" onclick="startGame()">
                     <i class="fas fa-play"></i> СТАРТ
                 </button>
+                <button class="stop-btn" id="stopBtn" onclick="stopGame()">
+                    <i class="fas fa-stop"></i> СТОП
+                </button>
                 <button class="refresh-btn" onclick="loadData()">
                     <i class="fas fa-sync-alt"></i> ОБНОВИТЬ
                 </button>
@@ -576,6 +588,14 @@
 
         function getPlayerName(player) {
             return player.userName || player.userId || 'Аноним';
+        }
+
+        function updateTopStats(players) {
+            const totalPlayers = players.length;
+            const totalMW = players.reduce((sum, p) => sum + (p.taps || 0), 0);
+            
+            document.getElementById('totalPlayers').textContent = totalPlayers;
+            document.getElementById('totalMW').textContent = formatNumber(totalMW);
         }
 
         function switchTab(tab) {
@@ -611,13 +631,6 @@
         }
 
         function displayResults(players) {
-            const totalPlayers = players.length;
-            const totalMW = players.reduce((sum, p) => sum + (p.taps || 0), 0);
-            
-            document.getElementById('totalPlayers').textContent = totalPlayers;
-            document.getElementById('totalMW').textContent = formatNumber(totalMW);
-            
-            // Подиум для топ-3
             let podiumHtml = '';
             
             if (players.length > 1) {
@@ -677,7 +690,6 @@
             
             document.getElementById('podium').innerHTML = podiumHtml;
             
-            // 🔥 ТАБЛИЦА: ТОП-5 (места 4 и 5)
             const tablePlayers = players.slice(3, 5);
             
             const rowsHtml = tablePlayers.map((player, index) => {
@@ -697,7 +709,6 @@
                 `;
             }).join('');
             
-            // Пустые строки, если участников меньше 5
             const emptyRows = 2 - tablePlayers.length;
             let emptyHtml = '';
             for (let i = 0; i < emptyRows; i++) {
@@ -744,6 +755,34 @@
             }
         }
 
+        async function stopGame() {
+            const stopBtn = document.getElementById('stopBtn');
+            const originalText = stopBtn.innerHTML;
+            stopBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ОСТАНОВКА...';
+            stopBtn.disabled = true;
+            
+            try {
+                const response = await fetch(`${API_URL}/stop`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('⏸️ Игра остановлена! Участники больше не могут тапать.');
+                    const startBtn = document.getElementById('startBtn');
+                    startBtn.innerHTML = '<i class="fas fa-play"></i> СТАРТ';
+                    startBtn.classList.remove('disabled');
+                    startBtn.disabled = false;
+                    loadData();
+                } else {
+                    alert('❌ Ошибка: ' + (data.error || 'Не удалось остановить игру'));
+                }
+            } catch(error) {
+                alert('❌ Ошибка соединения');
+            } finally {
+                stopBtn.innerHTML = originalText;
+                stopBtn.disabled = false;
+            }
+        }
+
         async function loadData() {
             try {
                 const response = await fetch(`${API_URL}/leaderboard`);
@@ -751,6 +790,8 @@
                 
                 if (data.success && data.data) {
                     currentData = data.data;
+                    
+                    updateTopStats(currentData);
                     
                     if (document.getElementById('bulbTab').classList.contains('active')) {
                         updateBulbTab(currentData);
@@ -769,6 +810,7 @@
             if (!confirm('⚠️ Удалить все данные и остановить игру? Продолжить?')) return;
             
             const statusEl = document.getElementById('updateTime');
+            const originalText = statusEl.innerHTML;
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Очистка...';
             
             try {
