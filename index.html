@@ -500,7 +500,7 @@
         // Запрос общей энергии с сервера
         async function fetchTotalEnergy() {
             try {
-                const response = await fetch(API_URL + '?t=' + Date.now());
+                const response = await fetch(`${API_URL}/total`);
                 const data = await response.json();
                 if (data.success && data.data) {
                     const newTotal = data.data.reduce((sum, p) => sum + (p.taps || 0), 0);
@@ -515,7 +515,7 @@
         // Проверка статуса игры (началась ли)
         async function checkGameStatus() {
             try {
-                const response = await fetch(API_URL + '?status=1&t=' + Date.now());
+                const response = await fetch(`${API_URL}/status`);
                 const data = await response.json();
                 
                 if (data.success) {
