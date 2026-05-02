@@ -723,7 +723,7 @@
             startBtn.disabled = true;
             
             try {
-                const response = await fetch('${API_URL}/start');
+                const response = await fetch(`${API_URL}/start`);
                 const data = await response.json();
                 
                 if (data.success) {
