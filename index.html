@@ -21,6 +21,7 @@
             padding: 16px;
         }
 
+        /* --- Все ваши стили остаются без изменений --- */
         .game-container {
             max-width: 500px;
             width: 100%;
@@ -169,7 +170,6 @@
             font-weight: 600;
         }
 
-        /* Прогресс-бар (общий прогресс без текста) */
         .progress-bar-container {
             width: 100%;
             height: 12px;
@@ -414,7 +414,6 @@
             <div class="personal-value" id="personalCounter">0</div>
             <div class="personal-label">МЕГАВАТТ</div>
             
-            <!-- Только прогресс-бар, без текста "Общая энергия команды" -->
             <div class="progress-bar-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
@@ -443,14 +442,13 @@
     <script>
         const API_URL = 'https://energy-tap.onrender.com/api';
         const SAVE_INTERVAL = 20;
-        const MAX_ENERGY = 13000; // Общая цель для всех участников
+        const MAX_ENERGY = 13000;
         
         let userName = '';
         let userId = '';
         let gameStarted = false;
-        let totalEnergy = 0; // Общая энергия с сервера
-        let personalCounter = 0; // Личный счётчик участника
-        let lastSavedPersonal = 0;
+        let totalEnergy = 0;
+        let personalCounter = 0;
         
         // Функция анимации молний
         function createTapAnimation() {
@@ -484,7 +482,7 @@
             }
         }
         
-        // Обновление прогресс-бара и блокировка кнопки при достижении цели
+        // Обновление прогресс-бара и блокировка кнопки
         function updateTotalDisplay() {
             const percent = Math.min(100, Math.round((totalEnergy / MAX_ENERGY) * 100));
             document.getElementById('progressBar').style.width = percent + '%';
@@ -497,14 +495,13 @@
             }
         }
         
-        // Запрос общей энергии с сервера
+        // ЗАПРОС ОБЩЕЙ ЭНЕРГИИ (исправлено)
         async function fetchTotalEnergy() {
             try {
                 const response = await fetch(`${API_URL}/total`);
                 const data = await response.json();
-                if (data.success && data.data) {
-                    const newTotal = data.data.reduce((sum, p) => sum + (p.taps || 0), 0);
-                    totalEnergy = newTotal;
+                if (data.success) {
+                    totalEnergy = data.total;
                     updateTotalDisplay();
                 }
             } catch(error) {
@@ -512,7 +509,7 @@
             }
         }
         
-        // Проверка статуса игры (началась ли)
+        // ПРОВЕРКА СТАТУСА ИГРЫ
         async function checkGameStatus() {
             try {
                 const response = await fetch(`${API_URL}/status`);
@@ -536,7 +533,7 @@
             }
         }
         
-        // Сохранение имени и инициализация
+        // СОХРАНЕНИЕ ИМЕНИ
         function saveUserName() {
             const name = document.getElementById('userNameInput').value.trim();
             if (!name) { alert('Введите имя'); return; }
@@ -544,11 +541,9 @@
             userName = name;
             userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
             
-            // Загружаем сохранённый личный счётчик
             const savedPersonal = localStorage.getItem('energyTap_personal_' + userId);
             if (savedPersonal) {
                 personalCounter = parseInt(savedPersonal) || 0;
-                lastSavedPersonal = personalCounter;
                 document.getElementById('personalCounter').innerText = personalCounter;
             }
             
@@ -557,41 +552,46 @@
             document.getElementById('userInfo').style.display = 'flex';
             document.getElementById('statusMessage').style.display = 'block';
             document.getElementById('footer').style.display = 'block';
-            
             document.getElementById('userNameDisplay').textContent = userName;
             
-            // Запускаем периодическое обновление
             fetchTotalEnergy();
-            setInterval(fetchTotalEnergy, 5000);
             checkGameStatus();
+            
+            setInterval(fetchTotalEnergy, 5000);
             setInterval(checkGameStatus, 3000);
         }
         
-        // Отправка личного прогресса на сервер
+        // ОТПРАВКА ДАННЫХ НА СЕРВЕР (исправлено)
         async function sendTapsToServer(tapsValue) {
             const statusEl = document.getElementById('statusMessage');
             statusEl.innerText = '⏳ Отправка...';
             
             try {
-                await fetch(API_URL, {
+                const response = await fetch(`${API_URL}/tap`, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({
                         userId: userId,
-                        userName: userName || 'Аноним',
+                        userName: userName,
                         taps: tapsValue
                     })
                 });
                 
-                lastSavedPersonal = tapsValue;
-                statusEl.innerText = '✅ Сохранено! Ваш вклад: ' + tapsValue + ' МВт';
+                const data = await response.json();
+                if (data.success) {
+                    statusEl.innerText = '✅ Сохранено! Ваш вклад: ' + tapsValue + ' МВт';
+                } else {
+                    statusEl.innerText = '❌ Ошибка сервера';
+                }
             } catch(e) {
-                statusEl.innerText = '❌ Ошибка';
+                console.error('Ошибка отправки:', e);
+                statusEl.innerText = '❌ Ошибка соединения';
             }
         }
         
-        // Обработка тапа
+        // ОБРАБОТКА ТАПА
         function handleTap() {
             if (!userName) {
                 document.getElementById('nameModal').classList.add('active');
@@ -603,27 +603,21 @@
                 return;
             }
             
-            if (totalEnergy >= MAX_ENERGY) {
-                return;
-            }
+            if (totalEnergy >= MAX_ENERGY) return;
             
             createTapAnimation();
             
-            // Увеличиваем личный счётчик
             personalCounter++;
             document.getElementById('personalCounter').innerText = personalCounter;
             localStorage.setItem('energyTap_personal_' + userId, personalCounter);
             
-            // Анимация личного счётчика
             const counterEl = document.getElementById('personalCounter');
             counterEl.classList.add('counter-pop');
             setTimeout(() => counterEl.classList.remove('counter-pop'), 200);
             
-            // Анимация кнопки
             const btn = document.getElementById('tapBtn');
             btn.classList.add('button-press');
             btn.classList.add('button-pulse');
-            
             setTimeout(() => {
                 btn.classList.remove('button-press');
                 btn.classList.remove('button-pulse');
@@ -631,7 +625,6 @@
             
             if (navigator.vibrate) navigator.vibrate(20);
             
-            // Отправка на сервер по интервалу
             if (personalCounter % SAVE_INTERVAL === 0) {
                 sendTapsToServer(personalCounter);
             } else {
