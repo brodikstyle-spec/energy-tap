@@ -7,4 +7,9 @@ build:
 run:
   command: node server.js
   containerPort: 3000
-  healthCheck: {}   # <-- ЭТА СТРОКА ОТКЛЮЧАЕТ ПРОВЕРКУ ЗДОРОВЬЯ
+  healthCheck:
+    path: /api/status
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 5
