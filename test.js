@@ -1,12 +1,11 @@
-console.log('✅ Test script started');
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-    res.send('Hello from Amvera!');
+app.get('/api/status', (req, res) => {
+    res.json({ success: true, active: false, message: 'Test server works!' });
 });
 
 app.listen(port, () => {
-    console.log(`✅ Test server running on port ${port}`);
+    console.log(`✅ Тестовый сервер УСПЕШНО запущен на порту ${port}`);
 });
