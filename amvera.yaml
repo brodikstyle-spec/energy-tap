@@ -5,11 +5,6 @@ meta:
 build:
   command: npm install
 run:
-  command: node test.js   # <--- ИЗМЕНИЛИ С server.js НА test.js
+  command: node server.js
   containerPort: 3000
-  healthCheck:
-    path: /api/status
-    initialDelaySeconds: 15
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 5
+  # healthCheck: {}   # ЗАКОММЕНТИРУЙТЕ ИЛИ УДАЛИТЕ ВСЮ СЕКЦИЮ
