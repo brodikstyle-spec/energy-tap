@@ -1,0 +1,8 @@
+meta:
+  environment: node.js
+  version: 20
+build:
+  command: npm install
+run:
+  command: node server.js
+  containerPort: 3000
