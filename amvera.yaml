@@ -9,7 +9,7 @@ run:
   containerPort: 3000
   healthCheck:
     path: /api/status
-    initialDelaySeconds: 15
+    initialDelaySeconds: 30   # <-- УВЕЛИЧИЛИ ЗНАЧЕНИЕ
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 5
