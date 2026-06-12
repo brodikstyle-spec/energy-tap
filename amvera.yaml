@@ -7,4 +7,3 @@ build:
 run:
   command: node server.js
   containerPort: 3000
-  # healthCheck: {}   # ЗАКОММЕНТИРУЙТЕ ИЛИ УДАЛИТЕ ВСЮ СЕКЦИЮ
