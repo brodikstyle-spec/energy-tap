@@ -1,7 +1,7 @@
 meta:
   environment: node.js
   toolchain: default
-  version: 20
+  version: "20"
 build:
   command: npm install
 run:
