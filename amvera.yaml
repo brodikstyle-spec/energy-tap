@@ -1,9 +1,12 @@
 meta:
-  environment: node.js
-  toolchain: default
-  version: "20"
+  environment: node
+  toolchain:
+    name: npm
+    version: 18
+
 build:
   command: npm install
+
 run:
   command: node server.js
   containerPort: 3000
