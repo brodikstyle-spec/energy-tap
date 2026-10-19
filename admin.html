@@ -422,17 +422,62 @@
         .footer {
             margin-top: 30px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            color: #666;
-            flex-wrap: wrap;
             gap: 20px;
+        }
+
+        .settings-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            background: #f0f5fa;
+            padding: 15px 30px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 90, 157, 0.2);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .settings-panel label {
+            font-weight: 700;
+            color: #005a9d;
+            font-size: 1.1rem;
+        }
+
+        .settings-panel input {
+            padding: 10px;
+            border: 2px solid #005a9d;
+            border-radius: 10px;
+            width: 120px;
+            font-size: 1.1rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .save-max-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: #ff9800;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .save-max-btn:hover {
+            background: #f57c00;
+            transform: scale(1.05);
         }
 
         .button-group {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             flex-wrap: wrap;
+            justify-content: center;
         }
 
         .refresh-btn, .reset-btn, .start-btn, .stop-btn {
@@ -467,6 +512,7 @@
             align-items: center;
             gap: 8px;
             font-size: 0.95rem;
+            color: #666;
         }
 
         .empty-state {
@@ -487,16 +533,13 @@
                 grid-template-columns: 50px 1fr 100px 50px;
                 padding: 12px 15px;
             }
-            .footer {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .button-group {
-                justify-content: center;
-            }
             .qr-container img {
                 width: 250px;
                 height: 250px;
+            }
+            .settings-panel {
+                flex-direction: column;
+                padding: 15px;
             }
         }
     </style>
@@ -588,9 +631,14 @@
         </div>
 
         <div class="footer">
-            <div class="update-time" id="updateTime">
-                <i class="far fa-clock"></i> Обновление...
+            <!-- Панель настройки цели -->
+            <div class="settings-panel">
+                <label for="maxEnergyInput">Цель (МВт):</label>
+                <input type="number" id="maxEnergyInput" value="10000">
+                <button class="save-max-btn" onclick="saveMaxEnergy()">Сохранить цель</button>
             </div>
+
+            <!-- Кнопки управления -->
             <div class="button-group">
                 <button class="start-btn" id="startBtn" onclick="startGame()">
                     <i class="fas fa-play"></i> СТАРТ
@@ -602,17 +650,21 @@
                     <i class="fas fa-trash"></i> СБРОСИТЬ ВСЁ
                 </button>
             </div>
+
+            <div class="update-time" id="updateTime">
+                <i class="far fa-clock"></i> Обновление...
+            </div>
         </div>
     </div>
 
     <script>
+        // ВАШ НОВЫЙ API
         const API_URL = 'https://energytap-app-kiukakoyaka.msk1.amvera.tech/api';
-        // Ссылка на страницу участника (замените на ваш реальный адрес GitHub Pages)
+        // Ссылка на страницу участника для QR-кода
         const PARTICIPANT_URL = 'https://brodikstyle-spec.github.io/energy-tap/'; 
         
-        const MAX_ENERGY = 13000;
-        
         let currentData = null;
+        let MAX_ENERGY = 10000; // Значение по умолчанию, будет перезаписано с сервера
 
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -650,7 +702,6 @@
         }
 
         function generateQRCode() {
-            // Генерируем QR-код через бесплатный API
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(PARTICIPANT_URL)}`;
             document.getElementById('qrImage').src = qrUrl;
             document.getElementById('qrLink').textContent = PARTICIPANT_URL;
@@ -771,6 +822,48 @@
             document.getElementById('leaderboardRows').innerHTML = rowsHtml + emptyHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных</div>';
         }
 
+        async function loadMaxEnergy() {
+            try {
+                const response = await fetch(`${API_URL}/max-energy`);
+                const data = await response.json();
+                if (data.success) {
+                    MAX_ENERGY = data.maxEnergy;
+                    document.getElementById('maxEnergyInput').value = MAX_ENERGY;
+                    if (currentData && document.getElementById('bulbTab').classList.contains('active')) {
+                        updateBulbTab(currentData);
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки лимита:', error);
+            }
+        }
+
+        async function saveMaxEnergy() {
+            const input = document.getElementById('maxEnergyInput');
+            const newValue = parseInt(input.value);
+            if (!newValue || newValue < 100) {
+                alert('Пожалуйста, введите число больше 100.');
+                return;
+            }
+            try {
+                const response = await fetch(`${API_URL}/max-energy`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ maxEnergy: newValue })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    MAX_ENERGY = newValue;
+                    alert(`✅ Новая цель: ${MAX_ENERGY} МВт`);
+                    loadData();
+                } else {
+                    alert('❌ Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Ошибка соединения');
+            }
+        }
+
         async function startGame() {
             const startBtn = document.getElementById('startBtn');
             startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ЗАПУСК...';
@@ -877,7 +970,9 @@
             }
         }
 
+        // Инициализация
         loadData();
+        loadMaxEnergy();
         setInterval(loadData, 5000);
     </script>
 </body>
