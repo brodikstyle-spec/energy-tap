@@ -228,6 +228,41 @@
             color: #666;
         }
 
+        /* QR-код */
+        .qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #f0f5fa, #e6ecf3);
+            border-radius: 60px;
+            border: 1px solid rgba(0, 90, 157, 0.2);
+        }
+
+        .qr-container img {
+            width: 350px;
+            height: 350px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .qr-instruction {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #005a9d;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .qr-link {
+            font-size: 1rem;
+            color: #666;
+            word-break: break-all;
+            text-align: center;
+        }
+
         /* Подиум */
         .podium {
             display: flex;
@@ -413,25 +448,10 @@
             font-size: 1rem;
         }
 
-        .refresh-btn {
-            background: #005a9d;
-            color: white;
-        }
-
-        .reset-btn {
-            background: #dc3545;
-            color: white;
-        }
-
-        .start-btn {
-            background: #2ecc71;
-            color: white;
-        }
-
-        .stop-btn {
-            background: #ffc107;
-            color: #333;
-        }
+        .refresh-btn { background: #005a9d; color: white; }
+        .reset-btn { background: #dc3545; color: white; }
+        .start-btn { background: #2ecc71; color: white; }
+        .stop-btn { background: #ffc107; color: #333; }
 
         .start-btn.disabled {
             background: #95a5a6;
@@ -440,10 +460,6 @@
 
         .refresh-btn:hover:not(:disabled), .reset-btn:hover, .start-btn:hover:not(.disabled), .stop-btn:hover {
             transform: scale(1.05);
-        }
-
-        .stop-btn:hover {
-            background: #e0a800;
         }
 
         .update-time {
@@ -477,6 +493,10 @@
             }
             .button-group {
                 justify-content: center;
+            }
+            .qr-container img {
+                width: 250px;
+                height: 250px;
             }
         }
     </style>
@@ -521,6 +541,9 @@
             <div class="tab" onclick="switchTab('results')">
                 <i class="fas fa-trophy"></i> Результаты
             </div>
+            <div class="tab" onclick="switchTab('qr')">
+                <i class="fas fa-qrcode"></i> QR-код
+            </div>
         </div>
 
         <!-- Вкладка: Лампочка -->
@@ -555,6 +578,15 @@
             </div>
         </div>
 
+        <!-- Вкладка: QR-код -->
+        <div id="qrTab" class="tab-content">
+            <div class="qr-container">
+                <img id="qrImage" src="" alt="QR-код">
+                <div class="qr-instruction">Отсканируйте, чтобы играть</div>
+                <div class="qr-link" id="qrLink"></div>
+            </div>
+        </div>
+
         <div class="footer">
             <div class="update-time" id="updateTime">
                 <i class="far fa-clock"></i> Обновление...
@@ -566,9 +598,6 @@
                 <button class="stop-btn" id="stopBtn" onclick="stopGame()">
                     <i class="fas fa-stop"></i> СТОП
                 </button>
-                <button class="refresh-btn" onclick="loadData()">
-                    <i class="fas fa-sync-alt"></i> ОБНОВИТЬ
-                </button>
                 <button class="reset-btn" onclick="resetData()">
                     <i class="fas fa-trash"></i> СБРОСИТЬ ВСЁ
                 </button>
@@ -578,7 +607,10 @@
 
     <script>
         const API_URL = 'https://energytap-app-kiukakoyaka.msk1.amvera.tech/api';
-        const MAX_ENERGY = 30000;
+        // Ссылка на страницу участника (замените на ваш реальный адрес GitHub Pages)
+        const PARTICIPANT_URL = 'https://brodikstyle-spec.github.io/energy-tap/'; 
+        
+        const MAX_ENERGY = 13000;
         
         let currentData = null;
 
@@ -603,14 +635,25 @@
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
             if (tab === 'bulb') {
-                document.querySelector('.tab').classList.add('active');
+                document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('bulbTab').classList.add('active');
                 if (currentData) updateBulbTab(currentData);
-            } else {
+            } else if (tab === 'results') {
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('resultsTab').classList.add('active');
                 if (currentData) displayResults(currentData);
+            } else if (tab === 'qr') {
+                document.querySelectorAll('.tab')[2].classList.add('active');
+                document.getElementById('qrTab').classList.add('active');
+                generateQRCode();
             }
+        }
+
+        function generateQRCode() {
+            // Генерируем QR-код через бесплатный API
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(PARTICIPANT_URL)}`;
+            document.getElementById('qrImage').src = qrUrl;
+            document.getElementById('qrLink').textContent = PARTICIPANT_URL;
         }
 
         function updateBulbTab(players) {
@@ -766,7 +809,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    alert('⏸️ Игра остановлена! Участники больше не могут тапать.');
+                    alert('⏸️ Игра остановлена!');
                     const startBtn = document.getElementById('startBtn');
                     startBtn.innerHTML = '<i class="fas fa-play"></i> СТАРТ';
                     startBtn.classList.remove('disabled');
@@ -795,7 +838,7 @@
                     
                     if (document.getElementById('bulbTab').classList.contains('active')) {
                         updateBulbTab(currentData);
-                    } else {
+                    } else if (document.getElementById('resultsTab').classList.contains('active')) {
                         displayResults(currentData);
                     }
                     
