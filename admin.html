@@ -427,60 +427,15 @@
             gap: 20px;
         }
 
-        .settings-panel {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            background: #f0f5fa;
-            padding: 15px 30px;
-            border-radius: 30px;
-            border: 1px solid rgba(0, 90, 157, 0.2);
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .settings-panel label {
-            font-weight: 700;
-            color: #005a9d;
-            font-size: 1.1rem;
-        }
-
-        .settings-panel input {
-            padding: 10px;
-            border: 2px solid #005a9d;
-            border-radius: 10px;
-            width: 120px;
-            font-size: 1.1rem;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .save-max-btn {
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            background: #ff9800;
-            color: white;
-            transition: all 0.3s;
-        }
-
-        .save-max-btn:hover {
-            background: #f57c00;
-            transform: scale(1.05);
-        }
-
         .button-group {
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
 
-        .refresh-btn, .reset-btn, .start-btn, .stop-btn {
+        .refresh-btn, .reset-btn, .start-btn, .stop-btn, .goal-btn {
             padding: 12px 25px;
             border-radius: 40px;
             font-weight: 700;
@@ -497,13 +452,14 @@
         .reset-btn { background: #dc3545; color: white; }
         .start-btn { background: #2ecc71; color: white; }
         .stop-btn { background: #ffc107; color: #333; }
+        .goal-btn { background: #9b59b6; color: white; }
 
         .start-btn.disabled {
             background: #95a5a6;
             cursor: not-allowed;
         }
 
-        .refresh-btn:hover:not(:disabled), .reset-btn:hover, .start-btn:hover:not(.disabled), .stop-btn:hover {
+        .refresh-btn:hover:not(:disabled), .reset-btn:hover, .start-btn:hover:not(.disabled), .stop-btn:hover, .goal-btn:hover {
             transform: scale(1.05);
         }
 
@@ -521,6 +477,106 @@
             color: #666;
         }
 
+        /* Модальное окно для ввода цели */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border: 2px solid #005a9d;
+            border-radius: 48px;
+            padding: 40px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 90, 157, 0.3);
+        }
+
+        .modal-content h2 {
+            color: #005a9d;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .goal-input {
+            width: 100%;
+            padding: 15px;
+            background: #f0f5fa;
+            border: 2px solid #005a9d;
+            border-radius: 20px;
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .goal-input:focus {
+            border-color: #003d6b;
+            box-shadow: 0 0 15px rgba(0, 90, 157, 0.3);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .save-btn {
+            background: #2ecc71;
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 40px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .save-btn:hover {
+            background: #27ae60;
+            transform: scale(1.05);
+        }
+
+        .cancel-btn {
+            background: #dc3545;
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 40px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+
         @media (max-width: 700px) {
             .container { padding: 20px; }
             .title h1 { font-size: 1.8rem; }
@@ -536,10 +592,6 @@
             .qr-container img {
                 width: 250px;
                 height: 250px;
-            }
-            .settings-panel {
-                flex-direction: column;
-                padding: 15px;
             }
         }
     </style>
@@ -631,20 +683,15 @@
         </div>
 
         <div class="footer">
-            <!-- Панель настройки цели -->
-            <div class="settings-panel">
-                <label for="maxEnergyInput">Цель (МВт):</label>
-                <input type="number" id="maxEnergyInput" value="10000">
-                <button class="save-max-btn" onclick="saveMaxEnergy()">Сохранить цель</button>
-            </div>
-
-            <!-- Кнопки управления -->
             <div class="button-group">
                 <button class="start-btn" id="startBtn" onclick="startGame()">
                     <i class="fas fa-play"></i> СТАРТ
                 </button>
                 <button class="stop-btn" id="stopBtn" onclick="stopGame()">
                     <i class="fas fa-stop"></i> СТОП
+                </button>
+                <button class="goal-btn" onclick="openGoalModal()">
+                    <i class="fas fa-bullseye"></i> ЦЕЛЬ
                 </button>
                 <button class="reset-btn" onclick="resetData()">
                     <i class="fas fa-trash"></i> СБРОСИТЬ ВСЁ
@@ -657,6 +704,19 @@
         </div>
     </div>
 
+    <!-- Модальное окно для ввода цели -->
+    <div class="modal" id="goalModal">
+        <div class="modal-content">
+            <h2>🎯 Установить цель</h2>
+            <p>Введите максимальное количество МВт для игры</p>
+            <input type="number" class="goal-input" id="maxEnergyInput" value="10000" min="100">
+            <div class="modal-buttons">
+                <button class="save-btn" onclick="saveMaxEnergy()">СОХРАНИТЬ</button>
+                <button class="cancel-btn" onclick="closeGoalModal()">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ВАШ НОВЫЙ API
         const API_URL = 'https://energytap-app-kiukakoyaka.msk1.amvera.tech/api';
@@ -664,7 +724,7 @@
         const PARTICIPANT_URL = 'https://brodikstyle-spec.github.io/energy-tap/'; 
         
         let currentData = null;
-        let MAX_ENERGY = 10000; // Значение по умолчанию, будет перезаписано с сервера
+        let MAX_ENERGY = 10000; // Значение по умолчанию
 
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -822,13 +882,22 @@
             document.getElementById('leaderboardRows').innerHTML = rowsHtml + emptyHtml || '<div class="empty-state"><i class="fas fa-bolt"></i><br>Нет данных</div>';
         }
 
+        // === ЛОГИКА УПРАВЛЕНИЯ ЦЕЛЬЮ ===
+        function openGoalModal() {
+            document.getElementById('maxEnergyInput').value = MAX_ENERGY;
+            document.getElementById('goalModal').classList.add('active');
+        }
+
+        function closeGoalModal() {
+            document.getElementById('goalModal').classList.remove('active');
+        }
+
         async function loadMaxEnergy() {
             try {
                 const response = await fetch(`${API_URL}/max-energy`);
                 const data = await response.json();
                 if (data.success) {
                     MAX_ENERGY = data.maxEnergy;
-                    document.getElementById('maxEnergyInput').value = MAX_ENERGY;
                     if (currentData && document.getElementById('bulbTab').classList.contains('active')) {
                         updateBulbTab(currentData);
                     }
@@ -841,10 +910,12 @@
         async function saveMaxEnergy() {
             const input = document.getElementById('maxEnergyInput');
             const newValue = parseInt(input.value);
+            
             if (!newValue || newValue < 100) {
                 alert('Пожалуйста, введите число больше 100.');
                 return;
             }
+            
             try {
                 const response = await fetch(`${API_URL}/max-energy`, {
                     method: 'POST',
@@ -852,9 +923,11 @@
                     body: JSON.stringify({ maxEnergy: newValue })
                 });
                 const data = await response.json();
+                
                 if (data.success) {
                     MAX_ENERGY = newValue;
                     alert(`✅ Новая цель: ${MAX_ENERGY} МВт`);
+                    closeGoalModal();
                     loadData();
                 } else {
                     alert('❌ Ошибка: ' + data.error);
@@ -864,6 +937,7 @@
             }
         }
 
+        // === УПРАВЛЕНИЕ ИГРОЙ ===
         async function startGame() {
             const startBtn = document.getElementById('startBtn');
             startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ЗАПУСК...';
